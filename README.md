@@ -1,7 +1,55 @@
-# Tauri + SvelteKit + TypeScript
+# KPPOS - Kape Rustiko Point of Sale System with Inventory Management System
 
-This template should help get you started developing with Tauri, SvelteKit and TypeScript in Vite.
+Members:
+- Dayandante, Michael D.
+- Biaculo, Richard Angelo
+- Nario, Nandy
 
-## Recommended IDE Setup
+Beneficiaries:
+- Rosqueta, Arthur
+- Rosqueta, Maybelouisse
 
-[VS Code](https://code.visualstudio.com/) + [Svelte](https://marketplace.visualstudio.com/items?itemName=svelte.svelte-vscode) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer).
+Advisers:
+- Sir John Dominic Pagot
+- Sir Loudel Manaloto
+
+Frontend:
+- SvelteKit
+- Flowbite
+- TailwindCSS
+- FontAwesome
+- Tauri
+
+Backend:
+- PHP
+- MySQL
+- Postman
+- XAMPP
+
+Modules:
+- npm install
+- composer install
+- npm install tailwindcss
+- npm install flowbite
+- npm install flowbite-svelte
+- npm install font-awesome
+- npm install svelte svelte-chartjs @sveltejs/kit
+- npm install @tauri-apps/icons
+- npm install --save-dev @sveltejs/adapter-static
+- npm install --save-dev @tauri-apps/cli
+- composer require phpoffice/phpspreadsheet
+- composer require phpmailer/phpmailer
+- npm install flowbite-svelte
+
+- npm install express
+- npm install mysql
+- npm install body-parser
+- npm install cors
+
+
+Commands:
+- npm run tauri dev
+
+Reminders:
+- Always commit on branch first before pushing to main repository
+- Always put comments on the code
