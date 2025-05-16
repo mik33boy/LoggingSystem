@@ -13,8 +13,8 @@
     "windows": [
       {
         "title": "Logging System",
-        "width": 1680,
-        "height": 920,
+        "width": 500,
+        "height": 550,
         "resizable": true,
         "fullscreen": false
       }
