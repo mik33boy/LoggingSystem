@@ -1,17 +1,15 @@
-# KPPOS - Kape Rustiko Point of Sale System with Inventory Management System
+# Logging System
 
 Members:
 - Dayandante, Michael D.
 - Biaculo, Richard Angelo
 - Nario, Nandy
+- Magno, Joanne
+- Salem, Jenishe
+- Rogero, Marc Ivan
 
 Beneficiaries:
-- Rosqueta, Arthur
-- Rosqueta, Maybelouisse
-
-Advisers:
-- Sir John Dominic Pagot
-- Sir Loudel Manaloto
+- Sir Arnie Armada
 
 Frontend:
 - SvelteKit
