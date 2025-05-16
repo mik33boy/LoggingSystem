@@ -1,8 +1,8 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "KP - Kape Rustiko POS System",
+  "productName": "Logging System",
   "version": "0.1.0",
-  "identifier": "com.kaperustiko.kppos",
+  "identifier": "com.communication.logging",
   "build": {
     "frontendDist": "../build",
     "devUrl": "http://localhost:5173",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "KP - Kape Rustiko POS System",
+        "title": "Logging System",
         "width": 1680,
         "height": 920,
         "resizable": true,
