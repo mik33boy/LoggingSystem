@@ -7,7 +7,7 @@
 
 <div class="flex flex-col h-screen">
 	<UserHeader />
-	<div class="flex flex-1 overflow-hidden">
+	<div class="flex flex-1 h-full overflow-hidden">
 		<UserSidebar />
 		<main class="flex-1 overflow-y-auto p-8">
 			<slot />
