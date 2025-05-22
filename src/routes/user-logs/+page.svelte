@@ -10,19 +10,58 @@
     },
     {
       timestamp: "2025-05-17 00:43",
-      type: "Email",
-      direction: "Incoming",
+      type: "Fax",
+      direction: "Outgoing",
       fromTo: "user@mail",
       summary: "Blabla"
     },
     {
       timestamp: "2025-05-17 00:43",
-      type: "Email",
-      direction: "Incoming",
+      type: "Call",
+      direction: "Outgoing",
       fromTo: "user@mail",
       summary: "Blabla"
     }
   ];
+
+  let sortColumn: string = '';
+  let sortDirection: 'asc' | 'desc' = 'asc';
+  let selectedType: string = 'All Types';
+  let selectedDirection: string = 'All Directions';
+  let searchQuery: string = '';
+
+  function sortBy(column: string) {
+    if (sortColumn === column) {
+      // Toggle direction
+      sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      sortColumn = column;
+      sortDirection = 'asc';
+    }
+    logs = [...logs].sort((a, b) => {
+      let aValue = a[column as keyof typeof a];
+      let bValue = b[column as keyof typeof b];
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        aValue = aValue.toLowerCase();
+        bValue = bValue.toLowerCase();
+      }
+      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }
+
+  $: filteredLogs = logs.filter(log => {
+    const matchesType = selectedType === 'All Types' || log.type === selectedType;
+    const matchesDirection = selectedDirection === 'All Directions' || log.direction === selectedDirection;
+    const matchesSearch = searchQuery === '' ||
+      log.timestamp.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      log.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      log.direction.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      log.fromTo.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      log.summary.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesType && matchesDirection && matchesSearch;
+  });
 </script>
 
 <div class="flex">
@@ -44,17 +83,20 @@
 
     <!-- Filters and Search (Flowbite style) -->
     <div class="flex items-center mb-6 gap-3">
-      <select id="type" class="form-select block w-40 px-3 py-2 text-sm border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500">
+      <select id="type" bind:value={selectedType} class="form-select block w-40 px-3 py-2 text-sm border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500">
         <option>All Types</option>
-        <!-- Add more options as needed -->
+        <option>Email</option>
+        <option>Fax</option>
+        <option>Call</option>
       </select>
-      <select id="direction" class="form-select block w-48 px-3 py-2 text-sm border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500">
+      <select id="direction" bind:value={selectedDirection} class="form-select block w-48 px-3 py-2 text-sm border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500">
         <option>All Directions</option>
-        <!-- Add more options as needed -->
+        <option>Incoming</option>
+        <option>Outgoing</option>
       </select>
       <div class="flex-1"></div>
       <div class="relative w-64">
-        <input type="text" id="search" class="form-input block w-full px-4 py-2 text-sm border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500" placeholder="Search..." />
+        <input type="text" id="search" bind:value={searchQuery} class="form-input block w-full px-4 py-2 text-sm border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500" placeholder="Search..." />
         <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <circle cx="11" cy="11" r="8"></circle>
           <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -67,17 +109,42 @@
       <table class="w-full text-sm text-left text-gray-700 bg-white">
         <thead class="text-xs uppercase bg-gray-50">
           <tr>
-            <th scope="col" class="px-6 py-3">Timestamp</th>
-            <th scope="col" class="px-6 py-3">Type</th>
-            <th scope="col" class="px-6 py-3">Direction</th>
-            <th scope="col" class="px-6 py-3">From / To</th>
-            <th scope="col" class="px-6 py-3">Summary</th>
+            <th scope="col" class="px-6 py-3 cursor-pointer select-none" on:click={() => sortBy('timestamp')}>
+              Timestamp
+              {#if sortColumn === 'timestamp'}
+                {sortDirection === 'asc' ? ' ▲' : ' ▼'}
+              {/if}
+            </th>
+            <th scope="col" class="px-6 py-3 cursor-pointer select-none" on:click={() => sortBy('type')}>
+              Type
+              {#if sortColumn === 'type'}
+                {sortDirection === 'asc' ? ' ▲' : ' ▼'}
+              {/if}
+            </th>
+            <th scope="col" class="px-6 py-3 cursor-pointer select-none" on:click={() => sortBy('direction')}>
+              Direction
+              {#if sortColumn === 'direction'}
+                {sortDirection === 'asc' ? ' ▲' : ' ▼'}
+              {/if}
+            </th>
+            <th scope="col" class="px-6 py-3 cursor-pointer select-none" on:click={() => sortBy('fromTo')}>
+              From / To
+              {#if sortColumn === 'fromTo'}
+                {sortDirection === 'asc' ? ' ▲' : ' ▼'}
+              {/if}
+            </th>
+            <th scope="col" class="px-6 py-3 cursor-pointer select-none" on:click={() => sortBy('summary')}>
+              Summary
+              {#if sortColumn === 'summary'}
+                {sortDirection === 'asc' ? ' ▲' : ' ▼'}
+              {/if}
+            </th>
             <th scope="col" class="px-6 py-3">Actions</th>
             <th scope="col" class="px-6 py-3">Report</th>
           </tr>
         </thead>
         <tbody>
-          {#each logs as log, i}
+          {#each filteredLogs as log, i}
             <tr class="border-b hover:bg-blue-50 {i % 2 === 1 ? 'bg-gray-50' : ''}">
               <td class="px-6 py-4 font-mono">{log.timestamp}</td>
               <td class="px-6 py-4">{log.type}</td>

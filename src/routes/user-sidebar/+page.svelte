@@ -39,10 +39,10 @@
       <!-- Dashboard and Toggle Button -->
       <div class="flex items-center justify-between mb-6">
         {#if !isCollapsed}
-          <svg class="h-8 w-8 text-cyan-100" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="4" y="4" width="32" height="32" rx="8" fill="#06b6d4"/>
-            <path d="M12 28L20 12L28 28" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-            <circle cx="20" cy="24" r="2" fill="white"/>
+          <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-cyan-100">
+            <rect x="4" y="4" width="40" height="40" rx="12" fill="#06b6d4"/>
+            <path d="M14 20c0-3.314 3.582-6 8-6s8 2.686 8 6-3.582 6-8 6c-1.07 0-2.09-.13-3-.36V32l-4-4.5V20z" fill="white" stroke="#0891b2" stroke-width="2"/>
+            <path d="M20 24l3 3 5-5" stroke="#06b6d4" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         {/if}
         <button
