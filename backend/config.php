@@ -1,6 +1,24 @@
 <?php
+// Set proper CORS headers for requests with credentials
+$allowed_origins = array(
+    'http://localhost:1420', // Svelte dev server
+    'http://localhost:5173', // Vite default
+    'http://localhost'       // Production
+);
+
+// Get the origin that sent the request
+$origin = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : '';
+
+// Set the CORS headers
 header("Content-Type: application/json");
-header("Access-Control-Allow-Origin: *");
+// Check if the origin is in the allowed list
+if (in_array($origin, $allowed_origins)) {
+    header("Access-Control-Allow-Origin: $origin");
+    header("Access-Control-Allow-Credentials: true");
+} else {
+    header("Access-Control-Allow-Origin: *"); // Fallback for non-credential requests
+}
+
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Access-Control-Max-Age: 3600"); // Cache preflight response for 1 hour
@@ -38,16 +56,40 @@ try {
 
 // Helper functions
 function authenticate() {
+    // Log the incoming request for debugging
+    error_log("Authentication attempt - Headers: " . json_encode(getallheaders()));
+    
+    // Check for headers in different formats (case-insensitive)
     $headers = getallheaders();
-    if (!isset($headers['Authorization'])) {
+    $authHeader = null;
+    
+    // Look for authorization header in any case variation
+    foreach ($headers as $name => $value) {
+        if (strtolower($name) === 'authorization') {
+            $authHeader = $value;
+            break;
+        }
+    }
+    
+    if (!$authHeader) {
+        error_log("Authorization header missing");
         http_response_code(401);
         die(json_encode(['error' => 'Authorization header missing']));
     }
     
-    $token = str_replace('Bearer ', '', $headers['Authorization']);
+    // Handle both "Bearer token" and just "token" formats
+    $token = $authHeader;
+    if (strpos($authHeader, 'Bearer ') === 0) {
+        $token = substr($authHeader, 7);
+    }
+    
     try {
-        return JWT::decode($token, new Key(JWT_SECRET, JWT_ALGORITHM));
+        error_log("Attempting to decode token: " . substr($token, 0, 10) . "...");
+        $decoded = JWT::decode($token, new Key(JWT_SECRET, JWT_ALGORITHM));
+        error_log("Token decoded successfully for user: " . $decoded->username);
+        return $decoded;
     } catch (Exception $e) {
+        error_log("Token validation failed: " . $e->getMessage());
         http_response_code(401);
         die(json_encode(['error' => 'Invalid token: ' . $e->getMessage()]));
     }

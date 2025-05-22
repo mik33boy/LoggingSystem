@@ -140,6 +140,14 @@ export const API = {
     },
     
     /**
+     * Get current authenticated user info
+     * @returns Promise with user data
+     */
+    getCurrentUser(): Promise<{success: boolean, user: User}> {
+        return this.request('user.php');
+    },
+    
+    /**
      * User registration
      * @param username - New user's username
      * @param email - New user's email

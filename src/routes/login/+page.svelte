@@ -54,10 +54,10 @@
           localStorage.setItem('user', JSON.stringify(response.user));
         }
         
-        // Redirect to home page on success
-        goto('/');
+        // Redirect to dashboard page on success
+        goto('/dashboard');
       } catch (err) {
-        console.error('Login error:', err);
+        console.error('Login   error:', err);
         if (err instanceof Error) {
           error = err.message;
         } else {
