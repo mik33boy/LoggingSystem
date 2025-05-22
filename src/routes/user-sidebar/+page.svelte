@@ -39,7 +39,11 @@
       <!-- Dashboard and Toggle Button -->
       <div class="flex items-center justify-between mb-6">
         {#if !isCollapsed}
-          <h1 class="text-xl font-extrabold text-cyan-100 tracking-wide">Dashboard</h1>
+          <svg class="h-8 w-8 text-cyan-100" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="4" y="4" width="32" height="32" rx="8" fill="#06b6d4"/>
+            <path d="M12 28L20 12L28 28" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="20" cy="24" r="2" fill="white"/>
+          </svg>
         {/if}
         <button
           on:click={toggleSidebar}
