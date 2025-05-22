@@ -1,12 +1,33 @@
 <script lang="ts">
+  import { API_ENDPOINTS, apiRequest } from '$lib/api/config';
+  
   let username = '';
   let error = '';
   let password = '';
   let showPassword = false;
   let loading = false;
   
-  function handleLogin() {
-    // Implement your login logic here
+  async function handleLogin() {
+    try {
+      loading = true;
+      error = '';
+      
+      const data = await apiRequest(API_ENDPOINTS.AUTH.LOGIN, {
+        method: 'POST',
+        body: JSON.stringify({ username, password })
+      });
+
+      // Store the token in localStorage
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+
+      // Redirect to dashboard or home page
+      window.location.href = '/user-dashboard';
+    } catch (err: any) {
+      error = err.message;
+    } finally {
+      loading = false;
+    }
   }
 
   // Reactive statement to determine the input type
@@ -50,7 +71,7 @@
                 bind:value={username}
                 required
                 class="w-full pl-10 pr-3 py-4 border border-gray-200 rounded-md text-gray-500 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent"
-                placeholder="Enter Email"
+                placeholder="Enter Username"
               />
             </div>
           </div>
@@ -88,7 +109,7 @@
         
         <!-- Registration link -->
         <div class="text-center text-sm text-gray-500">
-          Don't have an account? <a href="/register" class="font-medium text-gray-700 hover:text-gray-900">Contact your administrator</a>
+          Don't have an account? <a href="/register" class="font-medium text-gray-700 hover:text-gray-900">Register here</a>
         </div>
       </form>
     </div>
