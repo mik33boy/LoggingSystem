@@ -31,22 +31,22 @@
   }
 </script>
 
-<div class="flex h-screen bg-gray-100">
+<div class="flex h-screen bg-cyan-900">
   <!-- Sidebar -->
-  <aside class={`${isCollapsed ? 'w-20' : 'w-64'} bg-white shadow-lg transition-all duration-300 ease-in-out py-4`}>
+  <aside class={`${isCollapsed ? 'w-20' : 'w-64'} bg-cyan-950 shadow-xl transition-all duration-300 ease-in-out py-4 border-r border-cyan-800`}>
     <!-- Navigation -->
     <nav class="px-4 space-y-2">
       <!-- Dashboard and Toggle Button -->
       <div class="flex items-center justify-between mb-6">
         {#if !isCollapsed}
-          <h1 class="text-xl font-bold text-gray-800">Dashboard</h1>
+          <h1 class="text-xl font-extrabold text-cyan-100 tracking-wide">Dashboard</h1>
         {/if}
         <button
           on:click={toggleSidebar}
-          class="p-2 rounded-lg hover:bg-gray-100 focus:outline-none"
+          class="p-2 rounded-lg hover:bg-cyan-900 focus:outline-none border border-cyan-800"
         >
           <svg
-            class="w-6 h-6 text-gray-600"
+            class="w-6 h-6 text-cyan-300"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -66,10 +66,10 @@
           <li>
             <a
               href={item.href}
-              class="flex items-center p-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors duration-200 {$page.url.pathname === item.href ? 'bg-blue-50 text-blue-600 border-l-4 border-blue-600' : ''}"
+              class="flex items-center p-2 text-cyan-100 rounded-lg hover:bg-cyan-900 transition-colors duration-200 {$page.url.pathname === item.href ? 'bg-cyan-800 text-cyan-300 border-l-4 border-cyan-400' : ''}"
             >
               <svg
-                class="w-6 h-6"
+                class="w-6 h-6 text-cyan-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -82,7 +82,7 @@
                 />
               </svg>
               {#if !isCollapsed}
-                <span class="ml-3">{item.label}</span>
+                <span class="ml-3 font-medium tracking-wide">{item.label}</span>
               {/if}
             </a>
           </li>
@@ -92,7 +92,7 @@
   </aside>
 
   <!-- Main Content -->
-  <main class="flex-1 overflow-y-auto">
+  <main class="flex-1 overflow-y-auto bg-cyan-50">
     <slot />
   </main>
 </div>

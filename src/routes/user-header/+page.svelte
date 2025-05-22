@@ -1,7 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   
-  let searchQuery = '';
   let notifications = [
     { id: 1, message: 'New message from John', time: '5 min ago', read: false },
     { id: 2, message: 'Meeting reminder', time: '1 hour ago', read: false },
@@ -11,11 +10,6 @@
   let showNotifications = false;
   let showProfileMenu = false;
   let unreadCount = notifications.filter(n => !n.read).length;
-
-  function handleSearch() {
-    // Implement search functionality
-    console.log('Searching for:', searchQuery);
-  }
 
   function markAllAsRead() {
     notifications = notifications.map(n => ({ ...n, read: true }));
@@ -46,29 +40,7 @@
 
 <header class="bg-white shadow-sm border-b border-gray-200">
   <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="flex justify-between items-center h-16">
-      <!-- Search Bar -->
-      <div class="flex-1 flex items-center max-w-2xl">
-        <div class="w-full">
-          <label for="search" class="sr-only">Search</label>
-          <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </div>
-            <input
-              id="search"
-              bind:value={searchQuery}
-              on:keydown={(e) => e.key === 'Enter' && handleSearch()}
-              class="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-150 ease-in-out sm:text-sm"
-              placeholder="Search anything..."
-              type="search"
-            />
-          </div>
-        </div>
-      </div>
-
+    <div class="flex justify-end items-center h-16">
       <!-- Right side buttons -->
       <div class="flex items-center space-x-4">
         <!-- Notifications -->
