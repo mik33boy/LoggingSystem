@@ -59,7 +59,20 @@
           </button>
 
           {#if showNotifications}
-            <div class="origin-top-right absolute right-0 mt-2 w-96 rounded-lg shadow-lg bg-white ring-1 ring-black ring-opacity-5 transform transition-all duration-200 ease-out">
+            <div class="origin-top-right absolute right-0 mt-2 w-96 rounded-lg shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50">
+              <div class="px-4 py-2 border-b border-gray-100">
+                <div class="relative z-0">
+                  <input
+                    type="text"
+                    placeholder="Search..."
+                    class="w-full pl-4 pr-10 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                  </svg>
+                </div>
+              </div>
               <div class="py-1">
                 <div class="px-4 py-3 flex justify-between items-center border-b border-gray-100">
                   <h3 class="text-sm font-semibold text-gray-900">Notifications</h3>

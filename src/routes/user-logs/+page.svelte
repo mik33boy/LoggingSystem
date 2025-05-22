@@ -2,6 +2,7 @@
   // Sample data for demonstration
   let logs = [
     {
+      fullName: "John Doe",
       timestamp: "2025-05-17 00:43",
       type: "Email",
       direction: "Incoming",
@@ -9,6 +10,7 @@
       summary: "Blabla"
     },
     {
+      fullName: "Jane Smith",
       timestamp: "2025-05-17 00:43",
       type: "Fax",
       direction: "Outgoing",
@@ -16,6 +18,7 @@
       summary: "Blabla"
     },
     {
+      fullName: "Alice Brown",
       timestamp: "2025-05-17 00:43",
       type: "Call",
       direction: "Outgoing",
@@ -95,7 +98,7 @@
         <option>Outgoing</option>
       </select>
       <div class="flex-1"></div>
-      <div class="relative w-64">
+      <div class="relative w-64 -z-1">
         <input type="text" id="search" bind:value={searchQuery} class="form-input block w-full px-4 py-2 text-sm border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500" placeholder="Search..." />
         <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <circle cx="11" cy="11" r="8"></circle>
@@ -109,6 +112,12 @@
       <table class="w-full text-sm text-left text-gray-700 bg-white">
         <thead class="text-xs uppercase bg-gray-50">
           <tr>
+            <th scope="col" class="px-6 py-3 cursor-pointer select-none" on:click={() => sortBy('fullName')}>
+              Full Name
+              {#if sortColumn === 'fullName'}
+                {sortDirection === 'asc' ? ' ▲' : ' ▼'}
+              {/if}
+            </th>
             <th scope="col" class="px-6 py-3 cursor-pointer select-none" on:click={() => sortBy('timestamp')}>
               Timestamp
               {#if sortColumn === 'timestamp'}
@@ -146,6 +155,7 @@
         <tbody>
           {#each filteredLogs as log, i}
             <tr class="border-b hover:bg-blue-50 {i % 2 === 1 ? 'bg-gray-50' : ''}">
+              <td class="px-6 py-4">{log.fullName}</td>
               <td class="px-6 py-4 font-mono">{log.timestamp}</td>
               <td class="px-6 py-4">{log.type}</td>
               <td class="px-6 py-4">{log.direction}</td>
@@ -163,5 +173,14 @@
         </tbody>
       </table>
     </div>
+
+    <!-- Floating Add Button -->
+    <button
+      type="button"
+      class="fixed bottom-8 right-8 z-50 flex items-center justify-center w-14 h-14 bg-gray-800 text-white rounded-full shadow-lg hover:bg-gray-700 transition text-3xl"
+      aria-label="Add Log"
+    >
+      +
+    </button>
   </div>
 </div>
