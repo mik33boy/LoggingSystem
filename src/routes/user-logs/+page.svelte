@@ -24,6 +24,62 @@
       direction: "Outgoing",
       fromTo: "user@mail",
       summary: "Blabla"
+    },
+    {
+      fullName: "Michael Johnson",
+      timestamp: "2025-05-17 01:10",
+      type: "Email",
+      direction: "Incoming",
+      fromTo: "michael@mail",
+      summary: "Sent project update"
+    },
+    {
+      fullName: "Emily Davis",
+      timestamp: "2025-05-17 01:15",
+      type: "Fax",
+      direction: "Outgoing",
+      fromTo: "emily@mail",
+      summary: "Sent signed contract"
+    },
+    {
+      fullName: "Chris Lee",
+      timestamp: "2025-05-17 01:20",
+      type: "Call",
+      direction: "Incoming",
+      fromTo: "chris@mail",
+      summary: "Discussed requirements"
+    },
+    {
+      fullName: "Olivia Martinez",
+      timestamp: "2025-05-17 01:25",
+      type: "Email",
+      direction: "Outgoing",
+      fromTo: "olivia@mail",
+      summary: "Follow-up on invoice"
+    },
+    {
+      fullName: "David Kim",
+      timestamp: "2025-05-17 01:30",
+      type: "Fax",
+      direction: "Incoming",
+      fromTo: "david@mail",
+      summary: "Received signed NDA"
+    },
+    {
+      fullName: "Sophia Wilson",
+      timestamp: "2025-05-17 01:35",
+      type: "Call",
+      direction: "Outgoing",
+      fromTo: "sophia@mail",
+      summary: "Demo call"
+    },
+    {
+      fullName: "James Anderson",
+      timestamp: "2025-05-17 01:40",
+      type: "Email",
+      direction: "Incoming",
+      fromTo: "james@mail",
+      summary: "Support request"
     }
   ];
 
@@ -32,6 +88,8 @@
   let selectedType: string = 'All Types';
   let selectedDirection: string = 'All Directions';
   let searchQuery: string = '';
+  let selectedDate: string = '';
+  let selectedTime: string = '';
 
   function sortBy(column: string) {
     if (sortColumn === column) {
@@ -64,7 +122,21 @@
       log.direction.toLowerCase().includes(searchQuery.toLowerCase()) ||
       log.fromTo.toLowerCase().includes(searchQuery.toLowerCase()) ||
       log.summary.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesType && matchesDirection && matchesSearch;
+
+    // Date and time filtering
+    let matchesDate = true;
+    let matchesTime = true;
+    if (selectedDate) {
+      // log.timestamp is "2025-05-17 00:43"
+      matchesDate = log.timestamp.startsWith(selectedDate);
+    }
+    if (selectedTime) {
+      // log.timestamp is "2025-05-17 00:43"
+      const logTime = log.timestamp.split(' ')[1].slice(0,5); // "00:43"
+      matchesTime = logTime === selectedTime;
+    }
+
+    return matchesType && matchesDirection && matchesSearch && matchesDate && matchesTime;
   });
 </script>
 
@@ -106,68 +178,78 @@
           <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
         </svg>
       </div>
+      <input
+        type="date"
+        bind:value={selectedDate}
+        class="form-input block w-40 px-3 py-2 text-sm border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500"
+      />
+      <input
+        type="time"
+        bind:value={selectedTime}
+        class="form-input block w-32 px-3 py-2 text-sm border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500"
+      />
     </div>
 
     <!-- Table (Flowbite style) -->
-    <div class="overflow-x-auto rounded-lg shadow">
-      <table class="w-full text-sm text-left text-gray-700 bg-white">
-        <thead class="text-xs uppercase bg-gray-50">
+    <div class="overflow-hidden rounded-xl shadow-lg border border-gray-200 bg-white">
+      <table class="min-w-full text-sm text-left text-gray-700 align-middle">
+        <thead class="text-xs uppercase bg-gradient-to-r from-blue-50 to-blue-100 text-gray-700 font-semibold tracking-wider border-b border-gray-200">
           <tr>
-            <th scope="col" class="px-6 py-3 cursor-pointer select-none" on:click={() => sortBy('fullName')}>
+            <th scope="col" class="px-6 py-4 cursor-pointer select-none whitespace-nowrap" on:click={() => sortBy('fullName')}>
               Full Name
               {#if sortColumn === 'fullName'}
                 {sortDirection === 'asc' ? ' ▲' : ' ▼'}
               {/if}
             </th>
-            <th scope="col" class="px-6 py-3 cursor-pointer select-none" on:click={() => sortBy('timestamp')}>
+            <th scope="col" class="px-6 py-4 cursor-pointer select-none whitespace-nowrap" on:click={() => sortBy('timestamp')}>
               Timestamp
               {#if sortColumn === 'timestamp'}
                 {sortDirection === 'asc' ? ' ▲' : ' ▼'}
               {/if}
             </th>
-            <th scope="col" class="px-6 py-3 cursor-pointer select-none" on:click={() => sortBy('type')}>
+            <th scope="col" class="px-6 py-4 cursor-pointer select-none whitespace-nowrap" on:click={() => sortBy('type')}>
               Type
               {#if sortColumn === 'type'}
                 {sortDirection === 'asc' ? ' ▲' : ' ▼'}
               {/if}
             </th>
-            <th scope="col" class="px-6 py-3 cursor-pointer select-none" on:click={() => sortBy('direction')}>
+            <th scope="col" class="px-6 py-4 cursor-pointer select-none whitespace-nowrap" on:click={() => sortBy('direction')}>
               Direction
               {#if sortColumn === 'direction'}
                 {sortDirection === 'asc' ? ' ▲' : ' ▼'}
               {/if}
             </th>
-            <th scope="col" class="px-6 py-3 cursor-pointer select-none" on:click={() => sortBy('fromTo')}>
+            <th scope="col" class="px-6 py-4 cursor-pointer select-none whitespace-nowrap" on:click={() => sortBy('fromTo')}>
               From / To
               {#if sortColumn === 'fromTo'}
                 {sortDirection === 'asc' ? ' ▲' : ' ▼'}
               {/if}
             </th>
-            <th scope="col" class="px-6 py-3 cursor-pointer select-none" on:click={() => sortBy('summary')}>
+            <th scope="col" class="px-6 py-4 cursor-pointer select-none whitespace-nowrap" on:click={() => sortBy('summary')}>
               Summary
               {#if sortColumn === 'summary'}
                 {sortDirection === 'asc' ? ' ▲' : ' ▼'}
               {/if}
             </th>
-            <th scope="col" class="px-6 py-3">Actions</th>
-            <th scope="col" class="px-6 py-3">Report</th>
+            <th scope="col" class="px-6 py-4 whitespace-nowrap">Actions</th>
+            <th scope="col" class="px-6 py-4 whitespace-nowrap">Report</th>
           </tr>
         </thead>
         <tbody>
           {#each filteredLogs as log, i}
-            <tr class="border-b hover:bg-blue-50 {i % 2 === 1 ? 'bg-gray-50' : ''}">
-              <td class="px-6 py-4">{log.fullName}</td>
-              <td class="px-6 py-4 font-mono">{log.timestamp}</td>
-              <td class="px-6 py-4">{log.type}</td>
-              <td class="px-6 py-4">{log.direction}</td>
-              <td class="px-6 py-4">{log.fromTo}</td>
-              <td class="px-6 py-4">{log.summary}</td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <a href="#" class="font-medium text-blue-600 hover:underline mr-3">View</a>
-                <a href="#" class="font-medium text-blue-600 hover:underline">Export</a>
+            <tr class="border-b border-gray-100 transition-colors duration-150 {i % 2 === 1 ? 'bg-blue-50' : 'bg-white'} hover:bg-blue-100">
+              <td class="px-6 py-4 align-middle whitespace-nowrap">{log.fullName}</td>
+              <td class="px-6 py-4 font-mono align-middle whitespace-nowrap">{log.timestamp}</td>
+              <td class="px-6 py-4 align-middle whitespace-nowrap">{log.type}</td>
+              <td class="px-6 py-4 align-middle whitespace-nowrap">{log.direction}</td>
+              <td class="px-6 py-4 align-middle whitespace-nowrap">{log.fromTo}</td>
+              <td class="px-6 py-4 align-middle whitespace-nowrap">{log.summary}</td>
+              <td class="px-6 py-4 align-middle whitespace-nowrap">
+                <a href="#" class="inline-block font-medium text-white bg-blue-500 hover:bg-blue-600 rounded px-3 py-1 mr-2 transition shadow-sm">View</a>
+                <a href="#" class="inline-block font-medium text-blue-600 bg-blue-100 hover:bg-blue-200 rounded px-3 py-1 transition shadow-sm">Export</a>
               </td>
-              <td class="px-6 py-4">
-                <button type="button" class="text-white bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 font-medium rounded-full text-xs px-5 py-1.5 text-center shadow transition">Generate</button>
+              <td class="px-6 py-4 align-middle whitespace-nowrap">
+                <button type="button" class="text-white bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 font-semibold rounded-full text-xs px-5 py-1.5 text-center shadow transition">Generate</button>
               </td>
             </tr>
           {/each}
@@ -176,12 +258,20 @@
     </div>
 
     <!-- Floating Add Button -->
-    <button
-      type="button"
-      class="fixed bottom-8 right-8 z-50 flex items-center justify-center w-14 h-14 bg-gray-800 text-white rounded-full shadow-lg hover:bg-gray-700 transition text-3xl"
-      aria-label="Add Log"
-    >
-      +
-    </button>
+    <div class="fixed bottom-8 right-8 z-50 group">
+      <button
+        type="button"
+        class="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white rounded-full shadow-xl transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-blue-300"
+        aria-label="Add Log"
+      >
+        <!-- Heroicon: Plus -->
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+        </svg>
+      </button>
+      <span class="absolute right-0 bottom-14 opacity-0 group-hover:opacity-100 bg-gray-800 text-white text-xs rounded py-1 px-3 pointer-events-none transition-opacity duration-200 shadow-lg">
+        Add Log
+      </span>
+    </div>
   </div>
 </div>
