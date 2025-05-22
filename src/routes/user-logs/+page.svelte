@@ -58,6 +58,7 @@
     const matchesType = selectedType === 'All Types' || log.type === selectedType;
     const matchesDirection = selectedDirection === 'All Directions' || log.direction === selectedDirection;
     const matchesSearch = searchQuery === '' ||
+      log.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       log.timestamp.toLowerCase().includes(searchQuery.toLowerCase()) ||
       log.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
       log.direction.toLowerCase().includes(searchQuery.toLowerCase()) ||
