@@ -6,27 +6,43 @@ export const API_ENDPOINTS = {
     REGISTER: `${API_BASE_URL}/auth/auth.php`,
     LOGIN: `${API_BASE_URL}/auth/auth.php`,
   },
+  LOGS: `${API_BASE_URL}/logs/logs.php`,
   // Add other API endpoints here as needed
 };
 
 // API request helper function
 export async function apiRequest(endpoint: string, options: RequestInit = {}) {
-  const defaultOptions: RequestInit = {
-    headers: {
-      'Content-Type': 'application/json',
-    },
+  // Get token from localStorage
+  const token = localStorage.getItem('token');
+  
+  // Set default headers
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+    ...(options.headers || {})
   };
 
-  const response = await fetch(endpoint, {
-    ...defaultOptions,
-    ...options,
-  });
+  try {
+    console.log('Making request to:', endpoint);
+    console.log('With headers:', headers);
+    
+    const response = await fetch(endpoint, {
+      ...options,
+      headers,
+      credentials: 'include',
+      mode: 'cors'
+    });
 
-  const data = await response.json();
+    const data = await response.json();
+    console.log('Response:', data);
 
-  if (!response.ok) {
-    throw new Error(data.error || 'API request failed');
+    if (!response.ok) {
+      throw new Error(data.error || `HTTP error! status: ${response.status}`);
+    }
+
+    return data;
+  } catch (error: any) {
+    console.error('API request failed:', error);
+    throw new Error(error.message || 'Network error');
   }
-
-  return data;
 } 

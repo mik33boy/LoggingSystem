@@ -30,7 +30,7 @@
       localStorage.setItem('user', JSON.stringify(data.user));
 
       // Redirect to dashboard
-      window.location.href = '/dashboard';
+      window.location.href = '/user-dashboard';
     } catch (err: any) {
       error = err.message;
     } finally {
