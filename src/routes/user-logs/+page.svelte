@@ -224,6 +224,121 @@
       return datetimeStr;
     }
   }
+
+  let showReportModal = false;
+  let reportLog: any = null;
+  let reportFormat: 'pdf' | 'excel' = 'pdf';
+  let reportRange: 'yearly' | 'monthly' | 'weekly' = 'monthly';
+
+  function openReportModal(log: any) {
+    reportLog = log;
+    showReportModal = true;
+  }
+
+  function closeReportModal() {
+    showReportModal = false;
+    reportLog = null;
+  }
+
+  async function generateReport(log: any, format: string = 'pdf', range: string = 'monthly') {
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            throw new Error('No authentication token found');
+        }
+
+        const response = await fetch(`${API_ENDPOINTS.LOGS}?action=report`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ logId: log.id, format, range })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to generate report');
+        }
+
+        // Get the blob from the response
+        const blob = await response.blob();
+        
+        // Create a URL for the blob
+        const url = window.URL.createObjectURL(blob);
+        
+        // Create a temporary link element
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `log-report-${log.id}.${format === 'excel' ? 'csv' : 'pdf'}`;
+        
+        // Append to body, click, and remove
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        
+        // Clean up the URL
+        window.URL.revokeObjectURL(url);
+        
+        // Close the modal
+        closeReportModal();
+    } catch (err: any) {
+        alert('Error generating report: ' + (err?.message || 'Unknown error occurred'));
+    }
+  }
+
+  async function deleteLog(logId: number) {
+    if (!confirm('Are you sure you want to delete this log?')) return;
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_ENDPOINTS.LOGS}?id=${logId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (!response.ok) throw new Error('Failed to delete log');
+      logs = logs.filter(log => log.id !== logId);
+    } catch (err) {
+      alert('Error deleting log: ' + err.message);
+    }
+  }
+
+  // Add a new variable for summary report modal
+  let showSummaryReportModal = false;
+  let summaryReportFormat: 'pdf' | 'excel' = 'pdf';
+  let summaryReportRange: 'weekly' | 'monthly' | 'yearly' = 'monthly';
+
+  // Add a new function for summary report generation
+  async function generateSummaryReport(format: string = 'pdf', range: string = 'monthly') {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) throw new Error('No authentication token found');
+      const response = await fetch(`${API_ENDPOINTS.LOGS}?action=report-summary`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ format, range })
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to generate summary report');
+      }
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `log-summary-report.${format === 'excel' ? 'csv' : 'pdf'}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (err: any) {
+      alert('Error generating summary report: ' + (err?.message || 'Unknown error occurred'));
+    }
+  }
 </script>
 <div class="flex h-screen">
 	<UserSidebar />
@@ -263,6 +378,9 @@
         <option>Outgoing</option>
       </select>
       <div class="flex-1"></div>
+      <button type="button" class="ml-4 px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white rounded shadow text-sm font-semibold" on:click={() => showSummaryReportModal = true}>
+        Generate Summary
+      </button>
       <div class="relative w-64 -z-1">
         <input type="text" id="search" bind:value={searchQuery} class="form-input block w-full px-4 py-2 text-sm border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500" placeholder="Search..." />
         <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -338,10 +456,10 @@
               <td class="px-6 py-4 align-middle whitespace-nowrap">{log.subject}</td>
               <td class="px-6 py-4 align-middle whitespace-nowrap">
                 <a href="#" class="inline-block font-medium text-white bg-blue-500 hover:bg-blue-600 rounded px-3 py-1 mr-2 transition shadow-sm" on:click|preventDefault={() => openViewModal(log)}>View</a>
-                <a href="#" class="inline-block font-medium text-blue-600 bg-blue-100 hover:bg-blue-200 rounded px-3 py-1 transition shadow-sm">Delete</a>
+                <a href="#" class="inline-block font-medium text-blue-600 bg-blue-100 hover:bg-blue-200 rounded px-3 py-1 transition shadow-sm" on:click|preventDefault={() => deleteLog(log.id)}>Delete</a>
               </td>
               <td class="px-6 py-4 align-middle whitespace-nowrap">
-                <button type="button" class="text-white bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 font-semibold rounded-full text-xs px-5 py-1.5 text-center shadow transition">Generate</button>
+                <button type="button" class="text-white bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 font-semibold rounded-full text-xs px-5 py-1.5 text-center shadow transition" on:click={() => openReportModal(log)}>Generate</button>
               </td>
             </tr>
           {/each}
@@ -613,6 +731,52 @@
             </ul>
           </div>
           <button class="close-btn" style="margin-top:2.5rem;background-color:#1976d2;color:white;border:none;padding:12px 28px;border-radius:6px;font-weight:700;font-size:1rem;cursor:pointer;transition:background-color 0.3s;display:block;margin-left:auto;" on:click={closeViewModal}>Close</button>
+        </div>
+      </div>
+    {/if}
+
+    {#if showReportModal && reportLog}
+      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+        <div class="bg-white rounded-lg shadow-lg p-6 max-w-md w-full relative">
+          <button class="absolute top-2 right-3 text-gray-400 hover:text-gray-600" on:click={closeReportModal}>&times;</button>
+          <h2 class="text-xl font-semibold mb-4">Generate Report</h2>
+          <div class="mb-4">
+            <label class="block font-medium mb-2">Format:</label>
+            <label class="mr-4"><input type="radio" bind:group={reportFormat} value="pdf" /> PDF</label>
+            <label><input type="radio" bind:group={reportFormat} value="excel" /> Excel</label>
+          </div>
+          <div class="flex justify-end">
+            <button class="px-4 py-2 bg-blue-600 text-white rounded" on:click={async () => {
+              await generateReport(reportLog, reportFormat);
+              closeReportModal();
+            }}>Generate</button>
+          </div>
+        </div>
+      </div>
+    {/if}
+
+    {#if showSummaryReportModal}
+      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+        <div class="bg-white rounded-lg shadow-lg p-6 max-w-md w-full relative">
+          <button class="absolute top-2 right-3 text-gray-400 hover:text-gray-600" on:click={() => showSummaryReportModal = false}>&times;</button>
+          <h2 class="text-xl font-semibold mb-4">Generate Summary Report</h2>
+          <div class="mb-4">
+            <label class="block font-medium mb-2">Format:</label>
+            <label class="mr-4"><input type="radio" bind:group={summaryReportFormat} value="pdf" /> PDF</label>
+            <label><input type="radio" bind:group={summaryReportFormat} value="excel" /> Excel</label>
+          </div>
+          <div class="mb-4">
+            <label class="block font-medium mb-2">Range:</label>
+            <label class="mr-4"><input type="radio" bind:group={summaryReportRange} value="weekly" /> Weekly</label>
+            <label class="mr-4"><input type="radio" bind:group={summaryReportRange} value="monthly" /> Monthly</label>
+            <label><input type="radio" bind:group={summaryReportRange} value="yearly" /> Yearly</label>
+          </div>
+          <div class="flex justify-end">
+            <button class="px-4 py-2 bg-blue-600 text-white rounded" on:click={async () => {
+              await generateSummaryReport(summaryReportFormat, summaryReportRange);
+              showSummaryReportModal = false;
+            }}>Generate</button>
+          </div>
         </div>
       </div>
     {/if}
