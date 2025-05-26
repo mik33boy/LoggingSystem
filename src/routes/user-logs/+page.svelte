@@ -101,12 +101,9 @@
   
   async function handleSubmit(e: Event) {
     e.preventDefault();
-    
+
     try {
-      // Get form data and process
       const actualCommType = commType === 'other' ? otherType : commType;
-      
-      // Fix direction case for sender/recipient
       const data = {
         direction,
         type: actualCommType,
@@ -115,26 +112,43 @@
         sender: direction === 'Incoming' ? fromTo : null,
         recipient: direction === 'Outgoing' ? fromTo : null,
         confidential,
-        // Optionally include user info for frontend display (not sent to backend)
         fullName: `${currentUser.firstName} ${currentUser.lastName}`.trim()
       };
-      
-      // Log token for debugging
-      console.log('Token:', localStorage.getItem('token'));
-      
-      // Send data to backend
-      const response = await apiRequest(API_ENDPOINTS.LOGS, {
+
+      let body: FormData | string;
+      let headers: any = {};
+
+      if (attachment) {
+        body = new FormData();
+        Object.entries(data).forEach(([key, value]) => {
+          if (value !== undefined && value !== null) {
+            body.append(key, value as string);
+          }
+        });
+        body.append('attachment', attachment);
+        // Do not set Content-Type header for FormData (browser will set it)
+      } else {
+        body = JSON.stringify(data);
+        headers['Content-Type'] = 'application/json';
+      }
+
+      const response = await fetch(API_ENDPOINTS.LOGS, {
         method: 'POST',
-        body: JSON.stringify(data)
+        headers: {
+          ...headers,
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body
       });
-      
-      if (response.success) {
-        // Add the new log to the logs array, ensuring fullName is set for immediate UI update
-        logs = [{ ...response.data, fullName: `${currentUser.firstName} ${currentUser.lastName}`.trim() }, ...logs];
+
+      const result = await response.json();
+
+      if (result.success) {
+        logs = [{ ...result.data, fullName: `${currentUser.firstName} ${currentUser.lastName}`.trim() }, ...logs];
         closeModal();
       }
     } catch (error: any) {
-      error = error.message;
+      alert(error.message);
     }
   }
 
@@ -340,22 +354,38 @@
       alert('Error generating summary report: ' + (err?.message || 'Unknown error occurred'));
     }
   }
+
+  // Add new variables for attachment
+  let attachment: File | null = null;
+  let attachmentName: string = '';
+
+  function handleFileChange(e: Event) {
+    const target = e.target as HTMLInputElement;
+    if (target && target.files && target.files.length > 0) {
+      attachment = target.files[0];
+      attachmentName = attachment.name;
+    } else {
+      attachment = null;
+      attachmentName = '';
+    }
+  }
 </script>
-<div class="flex h-screen bg-gray-50">
+<div class="flex h-screen bg-gray-50 ">
   <div class="flex-1 flex flex-col overflow-hidden items-center justify-start">
-    <div class="w-full px-2 py-8">
+    <div class="w-full px-2 py-1">
       <!-- Header Section -->
-      <div class="flex items-center justify-between bg-white p-6 rounded-2xl shadow-lg mb-8 border border-gray-200 w-full">
-        <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Log Management</h1>
-        <div class="flex items-center text-gray-600 text-base">
-          <span class="inline-flex items-center px-3 py-1 rounded-full text-base font-medium bg-gray-200 text-gray-700">
-            <svg class="w-5 h-5 mr-1 text-gray-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2h2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"></path></svg>
+      <div class="flex items-center justify-between bg-white p-2 rounded-2xl shadow-lg mb-4 border border-gray-200 w-full">
+        <h1 class="text-lg font-bold text-gray-900 tracking-tight">Log Management</h1>
+        <div class="flex items-center text-gray-600 text-sm">
+          <span class="inline-flex items-center px-2 py-1 rounded-full text-sm font-medium bg-gray-200 text-gray-700">
+            <svg class="w-4 h-4 mr-1 text-gray-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2h2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"></path></svg>
             LogSystem
           </span>
           <span class="mx-2">/</span>
-          <span class="inline-flex items-center px-3 py-1 rounded-full text-base font-semibold bg-gray-100 text-gray-800">Log Management</span>
+          <span class="inline-flex items-center px-2 py-1 rounded-full text-sm font-semibold bg-gray-100 text-gray-800">Log Management</span>
         </div>
       </div>
+
       <!-- Filters and Search -->
       <div class="flex flex-wrap items-center gap-4 mb-8 bg-white p-4 rounded-xl shadow border border-gray-100 w-full">
         <select id="type" bind:value={selectedType} class="form-select w-40 px-3 py-2 text-sm border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500">
@@ -431,66 +461,104 @@
         </span>
       </div>
 
-
-
       <!-- Add Log Modal -->
       {#if showModal}
-        <div class="fixed inset-0 z-[10000] flex items-center justify-center bg-black bg-opacity-40">
-          <div class="modal-content bg-white p-8 rounded-2xl w-full max-w-lg relative">
-            <button class="absolute top-3 right-3 text-gray-400 hover:text-gray-700 text-2xl font-bold" on:click={closeModal}>&times;</button>
-            <h2 class="text-xl font-bold mb-4">Add Log Entry</h2>
-            <form on:submit|preventDefault={handleSubmit}>
-              <div class="mb-3">
-                <label class="block text-sm font-medium mb-1">Type</label>
-                <select bind:value={commType} class="form-select w-full px-3 py-2 border rounded">
-                  <option value="">Select Type</option>
-                  <option value="Email">Email</option>
-                  <option value="Fax">Fax</option>
-                  <option value="Call">Call</option>
-                  <option value="other">Other</option>
-                </select>
-                {#if commType === 'other'}
-                  <input type="text" bind:value={otherType} class="form-input w-full mt-2 px-3 py-2 border rounded" placeholder="Specify other type" />
-                {/if}
+        <div class="fixed inset-0 z-[10000] flex items-center justify-center bg-black bg-opacity-40 animate-fadeIn">
+          <div class="modal-content bg-white p-8 rounded-2xl w-full max-w-lg relative shadow-2xl border border-blue-100 max-h-[90vh] overflow-y-auto">
+            <button class="absolute top-3 right-3 text-gray-400 hover:text-gray-700 text-2xl font-bold transition-colors" on:click={closeModal}>&times;</button>
+            <h2 class="text-2xl font-extrabold mb-1 text-blue-700 flex items-center gap-2">
+              <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+              Add Log Entry
+            </h2>
+            <p class="text-gray-500 mb-6 text-sm">Fill in the details below to add a new communication log.</p>
+            {#if false}
+              <div class="mb-4 p-2 bg-red-100 text-red-700 rounded text-sm">Error: Please fill all required fields.</div>
+            {/if}
+            <form on:submit|preventDefault={handleSubmit} class="space-y-6">
+              <!-- Communication Details -->
+              <div>
+                <h3 class="text-base font-semibold text-gray-700 mb-2 border-b pb-1 border-gray-200">Communication Details</h3>
+                <div class="grid grid-cols-1 gap-4 mt-2">
+                  <div>
+                    <label class="block text-sm font-medium mb-1">Type <span class="text-red-500">*</span></label>
+                    <select bind:value={commType} class="form-select w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-blue-500 transition">
+                      <option value="">Select Type</option>
+                      <option value="Email">Email</option>
+                      <option value="Fax">Fax</option>
+                      <option value="Call">Call</option>
+                      <option value="other">Other</option>
+                    </select>
+                    {#if commType === 'other'}
+                      <input type="text" bind:value={otherType} class="form-input w-full mt-2 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-blue-500 transition" placeholder="Specify other type" />
+                    {/if}
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium mb-1">Direction <span class="text-red-500">*</span></label>
+                    <select bind:value={direction} class="form-select w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-blue-500 transition">
+                      <option value="">Select Direction</option>
+                      <option value="Incoming">Incoming</option>
+                      <option value="Outgoing">Outgoing</option>
+                    </select>
+                  </div>
+                  <div class="relative">
+                    <label class="block text-sm font-medium mb-1">From / To <span class="text-red-500">*</span></label>
+                    <input type="text" bind:value={fromTo} class="form-input w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-blue-500 transition" placeholder="Email or phone" on:input={(e) => updateFilteredContacts(e.target && e.target instanceof HTMLInputElement ? e.target.value : '')} autocomplete="off" />
+                    <span class="text-xs text-gray-400">Enter an email or phone number. Suggestions will appear as you type.</span>
+                    {#if showAutocomplete}
+                      <ul class="absolute bg-white border rounded shadow mt-1 w-full z-10">
+                        {#each filteredContacts as contact}
+                          <li class="px-3 py-1 hover:bg-blue-100 cursor-pointer" on:click={() => selectContact(contact)}>{contact}</li>
+                        {/each}
+                      </ul>
+                    {/if}
+                  </div>
+                </div>
               </div>
-              <div class="mb-3">
-                <label class="block text-sm font-medium mb-1">Direction</label>
-                <select bind:value={direction} class="form-select w-full px-3 py-2 border rounded">
-                  <option value="">Select Direction</option>
-                  <option value="Incoming">Incoming</option>
-                  <option value="Outgoing">Outgoing</option>
-                </select>
+              <!-- Message Details -->
+              <div>
+                <h3 class="text-base font-semibold text-gray-700 mb-2 border-b pb-1 border-gray-200">Message Details</h3>
+                <div class="grid grid-cols-1 gap-4 mt-2">
+                  <div>
+                    <label class="block text-sm font-medium mb-1">Subject <span class="text-red-500">*</span></label>
+                    <input type="text" bind:value={subject} class="form-input w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-blue-500 transition" placeholder="Subject of the communication" />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium mb-1">Details <span class="text-red-500">*</span></label>
+                    <textarea bind:value={details} class="form-input w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-blue-500 transition" rows="3" placeholder="Enter details here..."></textarea>
+                  </div>
+                  <div class="flex items-center gap-3 mt-2">
+                    <input type="checkbox" bind:checked={confidential} id="confidential" class="accent-blue-600" />
+                    <label for="confidential" class="block text-sm font-medium">Mark as Confidential</label>
+                  </div>
+                </div>
               </div>
-              <div class="mb-3">
-                <label class="block text-sm font-medium mb-1">From / To</label>
-                <input type="text" bind:value={fromTo} class="form-input w-full px-3 py-2 border rounded" placeholder="Email or phone" on:input={(e) => updateFilteredContacts(e.target.value)} />
-                {#if showAutocomplete}
-                  <ul class="absolute bg-white border rounded shadow mt-1 w-full z-10">
-                    {#each filteredContacts as contact}
-                      <li class="px-3 py-1 hover:bg-blue-100 cursor-pointer" on:click={() => selectContact(contact)}>{contact}</li>
-                    {/each}
-                  </ul>
-                {/if}
+              <!-- Attachment -->
+              <div>
+                <h3 class="text-base font-semibold text-gray-700 mb-2 border-b pb-1 border-gray-200">Attachment</h3>
+                <div class="mt-2">
+                  <label class="block text-sm font-medium mb-1" for="attachment">Upload File</label>
+                  <input
+                    id="attachment"
+                    type="file"
+                    class="block w-full text-sm text-gray-700 border border-gray-300 rounded-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-300"
+                    on:change={(e) => handleFileChange(e)}
+                  />
+                  {#if attachmentName}
+                    <div class="mt-1 text-xs text-gray-500">Selected: {attachmentName}</div>
+                  {/if}
+                </div>
               </div>
-              <div class="mb-3">
-                <label class="block text-sm font-medium mb-1">Subject</label>
-                <input type="text" bind:value={subject} class="form-input w-full px-3 py-2 border rounded" />
+              <!-- Date & Time -->
+              <div>
+                <h3 class="text-base font-semibold text-gray-700 mb-2 border-b pb-1 border-gray-200">Date & Time</h3>
+                <div class="mt-2">
+                  <label class="block text-sm font-medium mb-1">Date & Time <span class="text-red-500">*</span></label>
+                  <input type="datetime-local" bind:value={dateTime} class="form-input w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-blue-500 transition" />
+                </div>
               </div>
-              <div class="mb-3">
-                <label class="block text-sm font-medium mb-1">Details</label>
-                <textarea bind:value={details} class="form-input w-full px-3 py-2 border rounded" rows="3"></textarea>
-              </div>
-              <div class="mb-3 flex items-center gap-4">
-                <label class="block text-sm font-medium">Confidential</label>
-                <input type="checkbox" bind:checked={confidential} />
-              </div>
-              <div class="mb-3">
-                <label class="block text-sm font-medium mb-1">Date & Time</label>
-                <input type="datetime-local" bind:value={dateTime} class="form-input w-full px-3 py-2 border rounded" />
-              </div>
-              <div class="flex justify-end mt-6">
-                <button type="button" class="mr-3 px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 text-gray-700" on:click={closeModal}>Cancel</button>
-                <button type="submit" class="px-5 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white font-semibold">Add Log</button>
+              <div class="flex justify-end gap-2 mt-8">
+                <button type="button" class="px-5 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold transition" on:click={closeModal}>Cancel</button>
+                <button type="submit" class="px-6 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold shadow transition">Add Log</button>
               </div>
             </form>
           </div>
@@ -499,4 +567,14 @@
     </div>
   </div>
 </div>
+
+<style>
+  @keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.98); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  .animate-fadeIn {
+    animation: fadeIn 0.25s cubic-bezier(0.4,0,0.2,1);
+  }
+</style>
 
