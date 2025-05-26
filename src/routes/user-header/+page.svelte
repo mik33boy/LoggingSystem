@@ -231,7 +231,7 @@
                   <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 14c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4z"/></svg>
                   {user.firstname} {user.lastname}
                 </p>
-                <p class="text-xs text-gray-500">{user.email}</p>
+                <p class="text-xs text-gray-500 pl-6">{user.email}</p>
               </div>
               <div class="py-1">
                 <a
