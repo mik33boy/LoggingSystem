@@ -68,6 +68,7 @@
   }
   
   function openModal() {
+    console.log('Add Log button clicked');
     showModal = true;
     commType = '';
     direction = '';
@@ -419,8 +420,8 @@
         </table>
       </div>
       <!-- Floating Add Button -->
-      <div class="fixed bottom-8 right-8 z-50 group">
-        <button type="button" class="flex items-center justify-center w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white rounded-full shadow-2xl transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-blue-300 border-4 border-white" aria-label="Add Log" on:click={openModal}>
+      <div class="fixed bottom-8 right-8 z-[9999] group pointer-events-auto">
+        <button type="button" class="flex items-center justify-center w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white rounded-full shadow-2xl transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-blue-300 border-4 border-white pointer-events-auto" aria-label="Add Log" on:click={openModal}>
           <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
           </svg>
@@ -429,25 +430,73 @@
           Add Log
         </span>
       </div>
-      <!-- Modals remain unchanged, but you can add more padding and rounded corners if needed -->
+
+
+
+      <!-- Add Log Modal -->
+      {#if showModal}
+        <div class="fixed inset-0 z-[10000] flex items-center justify-center bg-black bg-opacity-40">
+          <div class="modal-content bg-white p-8 rounded-2xl w-full max-w-lg relative">
+            <button class="absolute top-3 right-3 text-gray-400 hover:text-gray-700 text-2xl font-bold" on:click={closeModal}>&times;</button>
+            <h2 class="text-xl font-bold mb-4">Add Log Entry</h2>
+            <form on:submit|preventDefault={handleSubmit}>
+              <div class="mb-3">
+                <label class="block text-sm font-medium mb-1">Type</label>
+                <select bind:value={commType} class="form-select w-full px-3 py-2 border rounded">
+                  <option value="">Select Type</option>
+                  <option value="Email">Email</option>
+                  <option value="Fax">Fax</option>
+                  <option value="Call">Call</option>
+                  <option value="other">Other</option>
+                </select>
+                {#if commType === 'other'}
+                  <input type="text" bind:value={otherType} class="form-input w-full mt-2 px-3 py-2 border rounded" placeholder="Specify other type" />
+                {/if}
+              </div>
+              <div class="mb-3">
+                <label class="block text-sm font-medium mb-1">Direction</label>
+                <select bind:value={direction} class="form-select w-full px-3 py-2 border rounded">
+                  <option value="">Select Direction</option>
+                  <option value="Incoming">Incoming</option>
+                  <option value="Outgoing">Outgoing</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="block text-sm font-medium mb-1">From / To</label>
+                <input type="text" bind:value={fromTo} class="form-input w-full px-3 py-2 border rounded" placeholder="Email or phone" on:input={(e) => updateFilteredContacts(e.target.value)} />
+                {#if showAutocomplete}
+                  <ul class="absolute bg-white border rounded shadow mt-1 w-full z-10">
+                    {#each filteredContacts as contact}
+                      <li class="px-3 py-1 hover:bg-blue-100 cursor-pointer" on:click={() => selectContact(contact)}>{contact}</li>
+                    {/each}
+                  </ul>
+                {/if}
+              </div>
+              <div class="mb-3">
+                <label class="block text-sm font-medium mb-1">Subject</label>
+                <input type="text" bind:value={subject} class="form-input w-full px-3 py-2 border rounded" />
+              </div>
+              <div class="mb-3">
+                <label class="block text-sm font-medium mb-1">Details</label>
+                <textarea bind:value={details} class="form-input w-full px-3 py-2 border rounded" rows="3"></textarea>
+              </div>
+              <div class="mb-3 flex items-center gap-4">
+                <label class="block text-sm font-medium">Confidential</label>
+                <input type="checkbox" bind:checked={confidential} />
+              </div>
+              <div class="mb-3">
+                <label class="block text-sm font-medium mb-1">Date & Time</label>
+                <input type="datetime-local" bind:value={dateTime} class="form-input w-full px-3 py-2 border rounded" />
+              </div>
+              <div class="flex justify-end mt-6">
+                <button type="button" class="mr-3 px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 text-gray-700" on:click={closeModal}>Cancel</button>
+                <button type="submit" class="px-5 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white font-semibold">Add Log</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      {/if}
     </div>
   </div>
 </div>
 
-<style>
-  /* Add specific modal styles here if needed */
-  :global(body.modal-open) {
-    overflow: hidden;
-  }
-  /* Card shadow for modals */
-  .modal-content {
-    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
-    border-radius: 1rem;
-  }
-  /* Table header bold and colored */
-  thead th {
-    font-weight: 700;
-    background: linear-gradient(to right, #e0e7ff, #bae6fd);
-    color: #1e293b;
-  }
-</style>

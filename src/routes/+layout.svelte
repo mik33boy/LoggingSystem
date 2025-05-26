@@ -8,13 +8,13 @@
 
 <div class="flex h-screen">
 	{#if $page.url.pathname !== '/login'}
-		<UserSidebar class="h-screen" />
+		<UserSidebar/>
 	{/if}
 	<div class="flex-1 flex flex-col overflow-hidden">
 		{#if $page.url.pathname !== '/login'}
 			<UserHeader />
 		{/if}
-		<main class="flex-1 overflow-y-auto p-8">
+		<main class="flex-1 h-screen p-8">
 			<slot />
 		</main>
 	</div>
