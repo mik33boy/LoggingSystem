@@ -38,21 +38,25 @@
 
 <div class="flex h-screen bg-cyan-900">
   <!-- Sidebar -->
-  <aside class={`${isCollapsed ? 'w-20' : 'w-64'} bg-cyan-950 shadow-xl transition-all duration-300 ease-in-out py-4 border-r border-cyan-800`}>
+  <aside class={`
+    ${isCollapsed ? 'w-20' : 'w-64'}
+    bg-[#1f1f1f]
+    shadow-2xl
+    transition-all duration-300 ease-in-out
+    py-6 px-2
+    border-r border-cyan-800
+    backdrop-blur-md bg-opacity-80
+    rounded-tr-3xl
+    rounded-br-3xl
+    min-h-screen
+  `} style="box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);">
     <!-- Navigation -->
-    <nav class="px-4 space-y-2">
-      <!-- Dashboard and Toggle Button -->
-      <div class="flex items-center justify-between mb-6">
-        {#if !isCollapsed}
-          <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-cyan-100">
-            <rect x="4" y="4" width="40" height="40" rx="12" fill="#06b6d4"/>
-            <path d="M14 20c0-3.314 3.582-6 8-6s8 2.686 8 6-3.582 6-8 6c-1.07 0-2.09-.13-3-.36V32l-4-4.5V20z" fill="white" stroke="#0891b2" stroke-width="2"/>
-            <path d="M20 24l3 3 5-5" stroke="#06b6d4" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        {/if}
+    <nav class="px-2 space-y-4">
+      <!-- Toggle Button -->
+      <div class="flex items-center justify-end mb-8">
         <button
           on:click={toggleSidebar}
-          class="p-2 rounded-lg hover:bg-cyan-900 focus:outline-none border border-cyan-800"
+          class="p-2 rounded-xl hover:bg-cyan-800 focus:outline-none border border-cyan-700 shadow-md transition-transform duration-200 hover:scale-110 group relative"
         >
           <svg
             class="w-6 h-6 text-cyan-300"
@@ -64,21 +68,27 @@
               stroke-linecap="round"
               stroke-linejoin="round"
               stroke-width="2"
-              d={isCollapsed ? 'M4 6h16M4 12h16M4 18h16' : 'M6 18L18 6M6 6l12 12'}
+              d={isCollapsed ? 'M4 6h16M4 12h16M4 18h16' : 'M6 6l12 12M6 18l12-12'}
             />
           </svg>
+          <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 bg-cyan-900 text-cyan-100 text-xs px-2 py-1 rounded shadow opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+            {isCollapsed ? 'Expand' : 'Collapse'}
+          </span>
         </button>
       </div>
-
       <ul class="space-y-2">
         {#each menuItems as item}
           <li>
             <a
               href={item.href}
-              class="flex items-center p-2 text-cyan-100 rounded-lg hover:bg-cyan-900 transition-colors duration-200 {$page.url.pathname === item.href ? 'bg-cyan-800 text-cyan-300 border-l-4 border-cyan-400' : ''}"
+              class="flex items-center gap-3 p-3 text-cyan-100 rounded-xl font-semibold tracking-wide transition-all duration-200
+                hover:bg-cyan-800 hover:shadow-lg hover:text-cyan-300
+                focus:outline-none focus:ring-2 focus:ring-cyan-400
+                active:scale-95
+                ${$page.url.pathname === item.href ? 'bg-gradient-to-r from-cyan-700 to-cyan-900 text-cyan-200 shadow-lg border-l-4 border-cyan-400' : ''}"
             >
               <svg
-                class="w-6 h-6 text-cyan-400"
+                class="w-6 h-6 text-gray-300 drop-shadow"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -91,7 +101,7 @@
                 />
               </svg>
               {#if !isCollapsed}
-                <span class="ml-3 font-medium tracking-wide">{item.label}</span>
+                <span class="ml-1">{item.label}</span>
               {/if}
             </a>
           </li>

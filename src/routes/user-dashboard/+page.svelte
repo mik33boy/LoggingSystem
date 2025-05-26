@@ -81,7 +81,7 @@ onMount(() => {
   <div class="flex-1 flex flex-col overflow-hidden items-center justify-start">
       <div class="w-full mx-auto px-4 py-6">
         <!-- Header Section -->
-        <div class="flex items-center justify-between bg-white/80 p-4 rounded-2xl shadow-xl mb-6 border border-gray-200 w-full backdrop-blur-md">
+        <div class="flex items-center justify-between bg-white/80 p-4 rounded-2xl shadow-xl mb-6 border border-gray-200 w-full backdrop-blur-md z-0">
           <div class="flex items-center gap-4">
             <div class="w-12 h-12 rounded-full bg-gradient-to-tr from-blue-400 to-green-400 flex items-center justify-center text-white text-2xl font-bold shadow">
               {localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user') || '{}').firstName?.[0] ?? 'U' : 'U'}

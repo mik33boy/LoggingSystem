@@ -132,7 +132,6 @@
     <div class="flex justify-between items-center h-16">
       <!-- Left: Logo/App Name -->
       <div class="flex items-center space-x-3">
-        <img src="/logo.svg" alt="App Logo" class="h-8 w-8" on:error={hideLogoOnError} />
         <span class="text-xl font-bold tracking-tight text-blue-700 select-none">LogiTrack</span>
       </div>
       <!-- Right side buttons -->
@@ -226,7 +225,7 @@
           </button>
 
           {#if showProfileMenu}
-            <div class="origin-top-right absolute right-0 mt-2 w-56 rounded-lg shadow-lg bg-white ring-1 ring-black ring-opacity-5" transition:scale={{ duration: 180, easing: cubicOut }}>
+            <div class="origin-top-right absolute right-0 mt-2 w-56 rounded-lg shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50" transition:scale={{ duration: 180, easing: cubicOut }}>
               <div class="px-4 py-3 border-b border-gray-100">
                 <p class="text-sm font-medium text-gray-900 flex items-center gap-2">
                   <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 14c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4z"/></svg>
