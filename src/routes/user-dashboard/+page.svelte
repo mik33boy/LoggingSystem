@@ -164,8 +164,8 @@ onMount(() => {
           <div class="bg-white p-6 rounded-2xl shadow md:col-span-2 border border-gray-100">
             <h3 class="text-lg font-semibold mb-2 text-gray-800">RECENT ACTIVITIES</h3>
             <div class="overflow-x-auto">
-              <table class="min-w-full text-sm rounded-xl overflow-hidden shadow-lg border-2 border-teal-200">
-                <thead class="bg-gradient-to-r from-teal-700 to-blue-900 text-white font-bold tracking-wider border-b border-teal-300 sticky top-0 z-10">
+              <table class="min-w-full text-sm rounded-xl overflow-hidden shadow-lg border-2 border-teal-700">
+                <thead class="bg-gradient-to-r from-teal-800 to-blue-900 text-white font-bold tracking-wider border-b border-teal-900 sticky top-0 z-10">
                   <tr>
                     <th class="py-3 px-4 rounded-tl-xl text-left">TIMESTAMP</th>
                     <th class="py-3 px-4 text-left">FROM/ TO</th>
@@ -180,16 +180,16 @@ onMount(() => {
                       <td class="py-3 px-4 whitespace-nowrap text-left">{activity.sender || activity.recipient || '--'}</td>
                       <td class="py-3 px-4 text-left">{activity.subject}</td>
                       <td class="py-3 px-4 text-left">
-                        <a href="/log/{activity.id}" class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-teal-600 text-white font-semibold shadow hover:bg-teal-800 transition-colors duration-150">
+                        <a href="/log/{activity.id}" class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-teal-700 text-white font-semibold shadow hover:bg-teal-900 transition-colors duration-150">
                           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                           View
                         </a>
                       </td>
                     </tr>
                   {:else}
-                  <tr>
+                    <tr>
                       <td colspan="4" class="py-6 text-center text-gray-500 bg-white rounded-b-xl">No recent activities</td>
-                  </tr>
+                    </tr>
                   {/each}
                 </tbody>
               </table>

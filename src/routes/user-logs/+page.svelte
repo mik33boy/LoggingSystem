@@ -414,35 +414,44 @@
         </button>
       </div>
       <!-- Table -->
-      <div class="overflow-x-auto rounded-2xl shadow-lg border border-gray-200 bg-white w-full">
+      <div class="overflow-x-auto rounded-2xl shadow-lg border border-teal-700 bg-white w-full">
         <table class="min-w-full text-sm text-left text-gray-700 align-middle">
-          <thead class="text-xs uppercase bg-gradient-to-r from-blue-100 to-blue-200 text-gray-800 font-bold tracking-wider border-b border-gray-200">
+          <thead class="text-xs uppercase bg-gradient-to-r from-teal-800 to-blue-900 text-white font-bold tracking-wider border-b border-teal-900">
             <tr>
-              <th scope="col" class="px-6 py-4 cursor-pointer select-none whitespace-nowrap" on:click={() => sortBy('fullName')}>Full Name {#if sortColumn === 'fullName'}{sortDirection === 'asc' ? ' ▲' : ' ▼'}{/if}</th>
-              <th scope="col" class="px-6 py-4 cursor-pointer select-none whitespace-nowrap" on:click={() => sortBy('timestamp')}>Timestamp {#if sortColumn === 'timestamp'}{sortDirection === 'asc' ? ' ▲' : ' ▼'}{/if}</th>
-              <th scope="col" class="px-6 py-4 cursor-pointer select-none whitespace-nowrap" on:click={() => sortBy('type')}>Type {#if sortColumn === 'type'}{sortDirection === 'asc' ? ' ▲' : ' ▼'}{/if}</th>
-              <th scope="col" class="px-6 py-4 cursor-pointer select-none whitespace-nowrap" on:click={() => sortBy('direction')}>Direction {#if sortColumn === 'direction'}{sortDirection === 'asc' ? ' ▲' : ' ▼'}{/if}</th>
-              <th scope="col" class="px-6 py-4 cursor-pointer select-none whitespace-nowrap" on:click={() => sortBy('fromTo')}>From / To {#if sortColumn === 'fromTo'}{sortDirection === 'asc' ? ' ▲' : ' ▼'}{/if}</th>
-              <th scope="col" class="px-6 py-4 cursor-pointer select-none whitespace-nowrap" on:click={() => sortBy('summary')}>Summary {#if sortColumn === 'summary'}{sortDirection === 'asc' ? ' ▲' : ' ▼'}{/if}</th>
-              <th scope="col" class="px-6 py-4 whitespace-nowrap">Actions</th>
-              <th scope="col" class="px-6 py-4 whitespace-nowrap">Report</th>
+              <th scope="col" class="px-6 py-4 cursor-pointer select-none whitespace-nowrap text-left" on:click={() => sortBy('fullName')}>Full Name {#if sortColumn === 'fullName'}{sortDirection === 'asc' ? ' ▲' : ' ▼'}{/if}</th>
+              <th scope="col" class="px-6 py-4 cursor-pointer select-none whitespace-nowrap text-left" on:click={() => sortBy('timestamp')}>Timestamp {#if sortColumn === 'timestamp'}{sortDirection === 'asc' ? ' ▲' : ' ▼'}{/if}</th>
+              <th scope="col" class="px-6 py-4 cursor-pointer select-none whitespace-nowrap text-left" on:click={() => sortBy('type')}>Type {#if sortColumn === 'type'}{sortDirection === 'asc' ? ' ▲' : ' ▼'}{/if}</th>
+              <th scope="col" class="px-6 py-4 cursor-pointer select-none whitespace-nowrap text-left" on:click={() => sortBy('direction')}>Direction {#if sortColumn === 'direction'}{sortDirection === 'asc' ? ' ▲' : ' ▼'}{/if}</th>
+              <th scope="col" class="px-6 py-4 cursor-pointer select-none whitespace-nowrap text-left" on:click={() => sortBy('fromTo')}>From / To {#if sortColumn === 'fromTo'}{sortDirection === 'asc' ? ' ▲' : ' ▼'}{/if}</th>
+              <th scope="col" class="px-6 py-4 cursor-pointer select-none whitespace-nowrap text-left" on:click={() => sortBy('summary')}>Summary {#if sortColumn === 'summary'}{sortDirection === 'asc' ? ' ▲' : ' ▼'}{/if}</th>
+              <th scope="col" class="px-6 py-4 whitespace-nowrap text-left">Actions</th>
+              <th scope="col" class="px-6 py-4 whitespace-nowrap text-left">Report</th>
             </tr>
           </thead>
           <tbody>
             {#each filteredLogs as log, i}
-              <tr class="border-b border-gray-100 transition-colors duration-150 {i % 2 === 1 ? 'bg-blue-50' : 'bg-white'} hover:bg-blue-100/60">
-                <td class="px-6 py-4 align-middle whitespace-nowrap">{log.fullName || '--'}</td>
-                <td class="px-6 py-4 font-mono align-middle whitespace-nowrap">{log.timestamp}</td>
-                <td class="px-6 py-4 align-middle whitespace-nowrap">{log.type}</td>
-                <td class="px-6 py-4 align-middle whitespace-nowrap">{log.direction}</td>
-                <td class="px-6 py-4 align-middle whitespace-nowrap">{log.sender || log.recipient || '--'}</td>
-                <td class="px-6 py-4 align-middle whitespace-nowrap">{log.subject}</td>
-                <td class="px-6 py-4 align-middle whitespace-nowrap">
-                  <a href="#" class="inline-block font-medium text-white bg-blue-500 hover:bg-blue-600 rounded px-3 py-1 mr-2 transition shadow-sm" on:click|preventDefault={() => openViewModal(log)}>View</a>
-                  <a href="#" class="inline-block font-medium text-blue-600 bg-blue-100 hover:bg-blue-200 rounded px-3 py-1 transition shadow-sm" on:click|preventDefault={() => deleteLog(log.id)}>Delete</a>
+              <tr class="border-b border-teal-100 {i % 2 === 1 ? 'bg-teal-50' : 'bg-white'}">
+                <td class="px-6 py-4 align-middle whitespace-nowrap text-left">{log.fullName || '--'}</td>
+                <td class="px-6 py-4 font-mono align-middle whitespace-nowrap text-left">{log.timestamp}</td>
+                <td class="px-6 py-4 align-middle whitespace-nowrap text-left">{log.type}</td>
+                <td class="px-6 py-4 align-middle whitespace-nowrap text-left">{log.direction}</td>
+                <td class="px-6 py-4 align-middle whitespace-nowrap text-left">{log.sender || log.recipient || '--'}</td>
+                <td class="px-6 py-4 align-middle whitespace-nowrap text-left">{log.subject}</td>
+                <td class="px-6 py-4 align-middle whitespace-nowrap text-left flex gap-2">
+                  <a href="#" class="inline-flex items-center gap-1 font-medium text-white bg-teal-700 hover:bg-teal-900 rounded-full px-3 py-1 transition shadow-sm" on:click|preventDefault={() => openViewModal(log)}>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                    View
+                  </a>
+                  <a href="#" class="inline-flex items-center gap-1 font-medium text-teal-700 bg-teal-100 hover:bg-teal-200 rounded-full px-3 py-1 transition shadow-sm" on:click|preventDefault={() => deleteLog(log.id)}>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg>
+                    Delete
+                  </a>
                 </td>
-                <td class="px-6 py-4 align-middle whitespace-nowrap">
-                  <button type="button" class="text-white bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 font-semibold rounded-full text-xs px-5 py-1.5 text-center shadow transition" on:click={() => openReportModal(log)}>Generate</button>
+                <td class="px-6 py-4 align-middle whitespace-nowrap text-left">
+                  <button type="button" class="inline-flex items-center gap-1 text-white bg-gradient-to-r from-teal-700 to-blue-700 hover:from-teal-800 hover:to-blue-900 font-semibold rounded-full text-xs px-5 py-1.5 text-center shadow transition" on:click={() => openReportModal(log)}>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
+                    Generate
+                  </button>
                 </td>
               </tr>
             {/each}
