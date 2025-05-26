@@ -117,7 +117,7 @@
               bind:value={username}
               required
               class="w-full pl-10 pr-3 py-4 border border-gray-200 rounded-md text-gray-500 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent"
-              placeholder="Enter Email"
+              placeholder="Enter Username"
             />
           </div>
         </div>

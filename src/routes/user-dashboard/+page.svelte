@@ -80,9 +80,9 @@ onMount(() => {
 </script>
 
 <div class="flex h-screen">
-	<UserSidebar />
+
 	<div class="flex-1 flex flex-col overflow-hidden">
-		<UserHeader />
+
 
 <div class="flex">
   <div class="flex-1 p-6 bg-gray-100">

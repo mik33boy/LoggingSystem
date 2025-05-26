@@ -86,6 +86,13 @@
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
   });
+
+  function logout() {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/login';
+  }
 </script>
 
 <header class="bg-white shadow-sm border-b border-gray-200">
@@ -185,7 +192,12 @@
                   Settings
                 </a>
                 <div class="border-t border-gray-100"></div>
-                <a href="/logout" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100">Sign out</a>
+                <a
+                  on:click={logout}
+                  class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100 cursor-pointer"
+                >
+                  Sign out
+                </a>
               </div>
             </div>
           {/if}
