@@ -315,7 +315,7 @@
       if (!response.ok) throw new Error('Failed to delete log');
       logs = logs.filter(log => log.id !== logId);
     } catch (err) {
-      alert('Error deleting log: ' + err.message);
+      alert('Error deleting log: ' + ((err instanceof Error) ? err.message : String(err)));
     }
   }
 
