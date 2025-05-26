@@ -164,23 +164,26 @@ onMount(() => {
           <div class="bg-white p-6 rounded-2xl shadow md:col-span-2 border border-gray-100">
             <h3 class="text-lg font-semibold mb-2 text-gray-800">RECENT ACTIVITIES</h3>
             <div class="overflow-x-auto">
-              <table class="min-w-full text-sm rounded-xl overflow-hidden shadow border border-gray-200">
-                <thead class="bg-gradient-to-r from-blue-100 to-blue-200 text-gray-800 font-bold tracking-wider border-b border-blue-200 sticky top-0 z-10">
-                  <tr class="text-left">
-                    <th class="py-3 px-4">TIMESTAMP</th>
-                    <th class="py-3 px-4">FROM/ TO</th>
-                    <th class="py-3 px-4">SUMMARY</th>
-                    <th class="py-3 px-4">ACTIONS</th>
+              <table class="min-w-full text-sm rounded-xl overflow-hidden shadow-lg border-2 border-teal-200">
+                <thead class="bg-gradient-to-r from-teal-700 to-blue-900 text-white font-bold tracking-wider border-b border-teal-300 sticky top-0 z-10">
+                  <tr>
+                    <th class="py-3 px-4 rounded-tl-xl text-left">TIMESTAMP</th>
+                    <th class="py-3 px-4 text-left">FROM/ TO</th>
+                    <th class="py-3 px-4 text-left">SUMMARY</th>
+                    <th class="py-3 px-4 rounded-tr-xl text-left">ACTIONS</th>
                   </tr>
                 </thead>
                 <tbody>
                   {#each recentActivities as activity, i}
-                    <tr class="border-b last:border-b-0 transition-colors duration-150 {i % 2 === 0 ? 'bg-white' : 'bg-blue-50'} hover:bg-blue-100/70">
-                      <td class="py-3 px-4 whitespace-nowrap">{activity.timestamp}</td>
-                      <td class="py-3 px-4 whitespace-nowrap">{activity.sender || activity.recipient || '--'}</td>
-                      <td class="py-3 px-4">{activity.subject}</td>
-                      <td class="py-3 px-4">
-                        <a href="/log/{activity.id}" class="text-blue-600 hover:text-blue-800 font-semibold underline underline-offset-2">View</a>
+                    <tr class="border-b last:border-b-0 {i % 2 === 0 ? 'bg-white' : 'bg-teal-50'}">
+                      <td class="py-3 px-4 whitespace-nowrap text-left">{activity.timestamp}</td>
+                      <td class="py-3 px-4 whitespace-nowrap text-left">{activity.sender || activity.recipient || '--'}</td>
+                      <td class="py-3 px-4 text-left">{activity.subject}</td>
+                      <td class="py-3 px-4 text-left">
+                        <a href="/log/{activity.id}" class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-teal-600 text-white font-semibold shadow hover:bg-teal-800 transition-colors duration-150">
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                          View
+                        </a>
                       </td>
                     </tr>
                   {:else}
@@ -193,9 +196,9 @@ onMount(() => {
             </div>
           </div>
           <!-- Priority Tracking -->
-          <div class="bg-gradient-to-tr from-yellow-50 to-green-50 p-6 rounded-2xl shadow border-l-4 border-yellow-400 flex flex-col gap-3 animate-fade-in">
-            <h3 class="text-lg font-bold mb-2 text-gray-800 flex items-center gap-2">
-              <svg class="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <div class="bg-gradient-to-tr from-teal-50 to-blue-50 p-6 rounded-2xl shadow border-l-4 border-teal-600 flex flex-col gap-3 animate-fade-in">
+            <h3 class="text-lg font-bold mb-2 text-teal-900 flex items-center gap-2">
+              <svg class="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
               Priority & Urgency Tracking
             </h3>
             <ul class="space-y-3">
@@ -207,21 +210,21 @@ onMount(() => {
                 <span class="ml-auto bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded">{pending} Incoming</span>
               </li>
               <li class="flex items-center gap-2">
-                <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-600 font-bold">
+                <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-teal-100 text-teal-600 font-bold">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8"/><rect x="3" y="6" width="18" height="12" rx="2"/></svg>
                 </span>
                 <span>Outgoing Communications</span>
-                <span class="ml-auto bg-blue-500 text-white text-xs font-bold px-2 py-0.5 rounded">{settlements} Total</span>
+                <span class="ml-auto bg-teal-600 text-white text-xs font-bold px-2 py-0.5 rounded">{settlements} Total</span>
               </li>
               <li class="flex items-center gap-2">
-                <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-green-100 text-green-600 font-bold">
+                <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-700 font-bold">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V4a2 2 0 10-4 0v1.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
                 </span>
                 <span>Total Log Entries</span>
-                <span class="ml-auto bg-green-500 text-white text-xs font-bold px-2 py-0.5 rounded">{logScanEntries}</span>
+                <span class="ml-auto bg-blue-700 text-white text-xs font-bold px-2 py-0.5 rounded">{logScanEntries}</span>
               </li>
             </ul>
-            <div class="mt-4 text-xs text-gray-500 italic text-center">
+            <div class="mt-4 text-xs text-teal-700 italic text-center">
               Stay on top of your priorities for a productive day!
             </div>
           </div>
