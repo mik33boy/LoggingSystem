@@ -1,8 +1,7 @@
 <script lang="ts">
-  import UserSidebar from '../user-sidebar/+page.svelte';
-  import UserHeader from '../user-header/+page.svelte';
   import { API_ENDPOINTS, apiRequest } from '$lib/api/config';
   import { onMount } from 'svelte';
+  import { goto } from '$app/navigation';
 
   // Logs data
   let logs: any[] = [];
@@ -26,10 +25,6 @@
   let otherType: string = '';
   let emailAddress: string = '';
   let phoneNumber: string = '';
-
-  // View modal state
-  let showViewModal = false;
-  let selectedLog: any = null;
 
   // Contacts for autocomplete
   const contacts = [
@@ -90,13 +85,7 @@
   }
   
   function openViewModal(log: any) {
-    selectedLog = log;
-    showViewModal = true;
-  }
-  
-  function closeViewModal() {
-    showViewModal = false;
-    selectedLog = null;
+    goto(`/user-logs/log-info?id=${log.id}`);
   }
   
   async function handleSubmit(e: Event) {
@@ -373,7 +362,7 @@
 <div class="flex h-screen bg-gray-50 ">
   <div class="flex-1 flex flex-col overflow-hidden items-center justify-start">
     <div class="w-full px-2 py-1">
-      <!-- Header Section -->
+
          <!-- Header Section -->
    <div class="flex items-center justify-between bg-white p-3 rounded-2xl shadow-md mb-4 border border-gray-200 w-full">
     <h1 class="text-xl font-bold text-gray-900 tracking-tight">Log Management</h1>
@@ -427,7 +416,7 @@
               <th scope="col" class="px-6 py-4 cursor-pointer select-none whitespace-nowrap text-left" on:click={() => sortBy('summary')}>Summary {#if sortColumn === 'summary'}{sortDirection === 'asc' ? ' ▲' : ' ▼'}{/if}</th>
               <th scope="col" class="px-6 py-4 whitespace-nowrap text-left">Actions</th>
               <th scope="col" class="px-6 py-4 whitespace-nowrap text-left">Report</th>
-            </tr>
+            </tr> 
           </thead>
           <tbody>
             {#each filteredLogs as log, i}
