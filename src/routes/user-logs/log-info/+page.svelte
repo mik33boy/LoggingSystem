@@ -89,6 +89,49 @@
         console.log(`Mark message with id: ${id} as confidential`);
     }
 
+    async function handleDelete(id: string) {
+        if (!confirm('Are you sure you want to delete this log?')) {
+            return;
+        }
+        
+        try {
+            const response = await apiRequest(`${API_ENDPOINTS.LOGS}?id=${id}`, {
+                method: 'DELETE'
+            });
+            
+            if (response.success) {
+                // Redirect back to logs list after successful deletion
+                goto('/user-logs');
+            } else {
+                alert('Failed to delete log');
+            }
+        } catch (err) {
+            console.error('Error deleting log:', err);
+            alert('Error deleting log');
+        }
+    }
+
+    async function handleGenerateReport(id: string) {
+        try {
+            const response = await apiRequest(`${API_ENDPOINTS.LOGS}/report?id=${id}`, {
+                method: 'GET'
+            });
+            
+            if (response.success) {
+                // Handle the report data - you might want to download it or show it in a modal
+                const reportData = response.data;
+                // For now, we'll just log it
+                console.log('Report generated:', reportData);
+                alert('Report generated successfully');
+            } else {
+                alert('Failed to generate report');
+            }
+        } catch (err) {
+            console.error('Error generating report:', err);
+            alert('Error generating report');
+        }
+    }
+
     // Helper function to format date and time
     function formatDateTime(dateTimeString: string): { date: string, time: string } {
         const date = new Date(dateTimeString);
@@ -109,15 +152,6 @@
             <div class="flex items-center justify-between bg-white p-3 rounded-2xl shadow-md mb-4 border border-gray-200 w-full">
                 <div class="flex items-center gap-4">
                     <h1 class="text-xl font-bold text-gray-900 tracking-tight">Log Details</h1>
-                    <button 
-                        class="inline-flex items-center px-4 py-2 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg shadow-lg hover:bg-blue-700 hover:shadow-xl transition-all duration-200 text-sm font-medium ml-4"
-                        on:click={() => goto('/user-logs/add-log')}
-                    >
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                        </svg>
-                        Add Log Entry
-                    </button>
                 </div>
                 <div class="flex items-center gap-4">
                     <div class="flex items-center text-gray-600 text-sm">
@@ -166,11 +200,52 @@
                                 </button>
                             </div>
                             <div class="flex items-center gap-2">
-                                <button class="p-2 hover:bg-gray-100 rounded-full">
-                                    <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-                                    </svg>
-                                </button>
+                                <div class="relative">
+                                    <button class="p-2 hover:bg-gray-100 rounded-full" on:click|stopPropagation={(e) => toggleOptions(e, 'conversation-options')}>
+                                        <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                                        </svg>
+                                    </button>
+                                    {#if activeOptionsId === 'conversation-options'}
+                                    <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10">
+                                        <ul class="py-1 text-sm text-gray-700">
+                                            <li>
+                                                <button 
+                                                    class="flex items-center w-full text-left px-4 py-2 hover:bg-gray-100"
+                                                    on:click={() => goto('/user-logs/add-log')}
+                                                >
+                                                    <svg class="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                                    </svg>
+                                                    Add Log Entry
+                                                </button>
+                                            </li>
+                                            <li>
+                                                <button 
+                                                    class="flex items-center w-full text-left px-4 py-2 hover:bg-gray-100"
+                                                    on:click={() => handleDelete(log.id)}
+                                                >
+                                                    <svg class="w-4 h-4 mr-2 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                    </svg>
+                                                    Delete
+                                                </button>
+                                            </li>
+                                            <li>
+                                                <button 
+                                                    class="flex items-center w-full text-left px-4 py-2 hover:bg-gray-100"
+                                                    on:click={() => handleGenerateReport(log.id)}
+                                                >
+                                                    <svg class="w-4 h-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                    </svg>
+                                                    Generate Report
+                                                </button>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    {/if}
+                                </div>
                             </div>
                         </div>
                     </div>
