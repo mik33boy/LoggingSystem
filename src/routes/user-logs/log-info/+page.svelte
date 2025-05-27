@@ -8,6 +8,10 @@
     let loading = true;
     let error: string | null = null;
     let selectedDate: string = '';
+    let activeOptionsId: string | null = null;
+    let replies: any[] = []; // Variable to store replies
+    let loadingReplies = false; // Loading state for replies
+    let repliesError: string | null = null; // Error state for replies
 
     onMount(async () => {
         loading = true;
@@ -25,6 +29,36 @@
             
             if (response.success) {
                 log = response.data[0]; // Assuming the backend returns an array with one log
+
+                // Fetch replies after fetching the main log if log is successful
+                if (log && log.client_name) {
+                    loadingReplies = true;
+                    try {
+                        // Use client_name from the fetched log instead of local storage
+                        const clientName = log.client_name;
+                        console.log('Fetching replies for client:', clientName);
+
+                        if (clientName) {
+                            const repliesResponse = await apiRequest(`${API_ENDPOINTS.LOGS}?action=getReplies&client_name=${encodeURIComponent(clientName)}`, {
+                                method: 'GET'
+                            });
+
+                            if (repliesResponse.success) {
+                                replies = repliesResponse.data;
+                            } else {
+                                repliesError = 'Failed to load replies';
+                            }
+                        } else {
+                            repliesError = 'Client name not available for fetching replies.';
+                        }
+                    } catch (err) {
+                        repliesError = 'Error loading replies';
+                        console.error(err);
+                    } finally {
+                        loadingReplies = false;
+                    }
+                }
+
             } else {
                 error = 'Failed to load log details';
             }
@@ -35,6 +69,37 @@
             loading = false;
         }
     });
+
+    function toggleOptions(e: Event, id: string) {
+        e.stopPropagation();
+        if (activeOptionsId === id) {
+            activeOptionsId = null; // Hide the menu if it's already open for this log
+        } else {
+            activeOptionsId = id; // Show the menu for this log
+        }
+    }
+
+    function handleReply(id: string) {
+        // Implement the logic to reply to the message
+        console.log(`Reply to message with id: ${id}`);
+    }
+
+    function handleConfidential(id: string) {
+        // Implement the logic to mark the message as confidential
+        console.log(`Mark message with id: ${id} as confidential`);
+    }
+
+    // Helper function to format date and time
+    function formatDateTime(dateTimeString: string): { date: string, time: string } {
+        const date = new Date(dateTimeString);
+        const optionsDate: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' };
+        const optionsTime: Intl.DateTimeFormatOptions = { hour: '2-digit', minute: '2-digit', hour12: true };
+        return {
+            date: date.toLocaleDateString(undefined, optionsDate),
+            time: date.toLocaleTimeString(undefined, optionsTime)
+        };
+    }
+
 </script>
 
 <div class="flex h-screen bg-gray-50">
@@ -126,6 +191,26 @@
                                         <!-- Subject -->
                                         <div class="flex items-center justify-between mb-2">
                                             <h3 class="text-sm font-semibold text-gray-900">{log.subject || "No Subject"}</h3>
+                                            <!-- Options Menu -->
+                                            <div class="relative">
+                                                <button class="p-1 rounded-full hover:bg-gray-100 focus:outline-none" on:click|stopPropagation={(e) => toggleOptions(e, log.id)}>
+                                                    <svg class="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path d="M10 6a2 2 0 110-4 2 2 0 010 4zm0 6a2 2 0 110-4 2 2 0 010 4zm0 6a2 2 0 110-4 2 2 0 010 4z"/>
+                                                    </svg>
+                                                </button>
+                                                {#if activeOptionsId === log.id}
+                                                <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10">
+                                                    <ul class="py-1 text-sm text-gray-700">
+                                                        <li>
+                                                            <button class="block w-full text-left px-4 py-2 hover:bg-gray-100" on:click={() => handleReply(log.id)}>Reply</button>
+                                                        </li>
+                                                        <li>
+                                                            <button class="block w-full text-left px-4 py-2 hover:bg-gray-100" on:click={() => handleConfidential(log.id)}>Mark as Confidential</button>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                                {/if}
+                                            </div>
                                         </div>
                                         
                                         <!-- Description -->
@@ -152,9 +237,9 @@
                                         <div class="flex items-center gap-2 mt-4 pt-3 border-t border-gray-100">
                                             <span class="text-xs text-gray-500">Logged by:</span>
                                             <div class="flex items-center gap-1.5">
-                                                <span class="text-xs font-medium text-gray-700">John Smith</span>
+                                                <span class="text-xs font-medium text-gray-700">{log.log_by || "N/A"}</span>
                                                 <span class="text-xs text-gray-400">•</span>
-                                                <span class="text-xs text-gray-500">IT Support</span>
+                                                <span class="text-xs text-gray-500">Support User</span>
                                             </div>
                                         </div>
                                     </div>
@@ -167,41 +252,49 @@
                                 </div>
                             </div>
 
-                            <!-- Sent Message -->
-                            <div class="flex items-start justify-end group">
-                                <div class="mr-4 w-full">
-                                    <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl py-4 px-5 max-w-[75%] ml-auto shadow-sm hover:shadow-md transition-shadow duration-200">
-                                        <!-- Subject -->
-                                        <div class="flex items-center justify-between mb-2">
-                                            <h3 class="text-sm font-semibold text-white">Re: Account Access Issue</h3>
-                                        </div>
-                                        
-                                        <!-- Description -->
-                                        <p class="text-sm text-white/90 leading-relaxed mb-3">I understand you're having trouble accessing your dashboard. Could you please try clearing your browser cache and let me know if the issue persists?</p>
+                            {#if loadingReplies}
+                                <p>Loading replies...</p>
+                            {:else if repliesError}
+                                <p class="text-red-500">{repliesError}</p>
+                            {:else}
+                                {#each replies as reply (reply.logs_rep)}
+                                    <!-- Sent Message -->
+                                    <div class="flex items-start justify-end group">
+                                        <div class="mr-4 w-full">
+                                            <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl py-4 px-5 max-w-[75%] ml-auto shadow-sm hover:shadow-md transition-shadow duration-200">
+                                                <!-- Subject -->
+                                                <div class="flex items-center justify-between mb-2">
+                                                    <h3 class="text-sm font-semibold text-white">Re: {reply.log_subject || "No Subject"}</h3>
+                                                </div>
+                                                
+                                                <!-- Description -->
+                                                <p class="text-sm text-white/90 leading-relaxed mb-3">{reply.logs_description || "No Content"}</p>
 
-                                        <!-- Logged By -->
-                                        <div class="flex items-center gap-2 mt-4 pt-3 border-t border-blue-400/30">
-                                            <span class="text-xs text-blue-100">Replied by:</span>
-                                            <div class="flex items-center gap-1.5">
-                                                <span class="text-xs font-medium text-white">Sarah Johnson</span>
-                                                <span class="text-xs text-blue-200">•</span>
-                                                <span class="text-xs text-blue-100">Support Team Lead</span>
+                                                <!-- Logged By -->
+                                                <div class="flex items-center gap-2 mt-4 pt-3 border-t border-blue-400/30">
+                                                    <span class="text-xs text-blue-100">Replied by:</span>
+                                                    <div class="flex items-center gap-1.5">
+                                                        <span class="text-xs font-medium text-white">{reply.logged_by || "N/A"}</span>
+                                                        <span class="text-xs text-blue-200">•</span>
+                                                        <span class="text-xs text-blue-100">Support Team Lead</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!-- Timestamp -->
+                                            <div class="flex items-center gap-2 mt-2 mr-1 justify-end">
+                                                <span class="text-xs text-gray-500">{formatDateTime(reply.created_at).date}</span>
+                                                <span class="text-xs text-gray-400">•</span>
+                                                <span class="text-xs text-gray-500">{formatDateTime(reply.created_at).time}</span>
+                                            </div>
+                                        </div>
+                                        <div class="flex-shrink-0">
+                                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-gray-500 to-gray-600 flex items-center justify-center text-white font-semibold shadow-md">
+                                                {reply.logged_by?.[0] || 'A'}
                                             </div>
                                         </div>
                                     </div>
-                                    <!-- Timestamp -->
-                                    <div class="flex items-center gap-2 mt-2 mr-1 justify-end">
-                                        <span class="text-xs text-gray-500">March 15, 2024</span>
-                                        <span class="text-xs text-gray-400">•</span>
-                                        <span class="text-xs text-gray-500">10:31 AM</span>
-                                    </div>
-                                </div>
-                                <div class="flex-shrink-0">
-                                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-gray-500 to-gray-600 flex items-center justify-center text-white font-semibold shadow-md">
-                                        A
-                                    </div>
-                                </div>
-                            </div>
+                                {/each}
+                            {/if}
                         </div>
                     </div>
 

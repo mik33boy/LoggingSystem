@@ -86,6 +86,48 @@ try {
                 
                 header('Content-Type: application/json');
                 echo json_encode(['success' => true, 'data' => $stats]);
+            } else if ($action === 'getByClient') {
+                // Get client name from query parameter
+                $clientName = isset($_GET['client_name']) ? $_GET['client_name'] : null;
+                
+                if (!$clientName) {
+                    returnError(400, 'Client name is required');
+                }
+
+                // Get logs for the user filtered by client name
+                $stmt = $pdo->prepare("
+                    SELECT l.*, CONCAT(u.firstname, ' ', u.lastname) AS fullName, l.created_at AS timestamp
+                    FROM logs l
+                    JOIN users u ON l.user_id = u.id
+                    WHERE l.user_id = ? AND l.client_name = ?
+                    ORDER BY l.created_at DESC
+                ");
+                $stmt->execute([$user['id'], $clientName]);
+                $logs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                
+                header('Content-Type: application/json');
+                echo json_encode(['success' => true, 'data' => $logs]);
+            } else if ($action === 'getReplies') {
+                // Get client name from query parameter
+                $clientName = isset($_GET['client_name']) ? $_GET['client_name'] : null;
+                
+                if (!$clientName) {
+                    returnError(400, 'Client name is required');
+                }
+
+                // Get logs for the user filtered by client name
+                $stmt = $pdo->prepare("
+                    SELECT l.*, CONCAT(u.firstname, ' ', u.lastname) AS fullName, l.created_at AS timestamp
+                    FROM logs_replies l
+                    JOIN users u ON l.user_id = u.id
+                    WHERE l.client_name = ?
+                    ORDER BY l.created_at DESC
+                ");
+                $stmt->execute([$clientName]);
+                $logs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                
+                header('Content-Type: application/json');
+                echo json_encode(['success' => true, 'data' => $logs]);
             } else {
                 // Get all logs for the user, join users for full name, alias created_at as timestamp
                 $stmt = $pdo->prepare("
@@ -219,7 +261,7 @@ try {
                         $csv .= implode(',', array_map('csvEscape', $row)) . "\r\n";
                     }
                     header('Content-Type: text/csv');
-                    header('Content-Disposition: attachment; filename=log-summary-report.csv');
+                    header('Content-Disposition: attachment; filename="log-summary-report.csv"');
                     echo $csv;
                     exit();
                 } else {
