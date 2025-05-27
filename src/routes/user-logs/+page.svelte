@@ -86,6 +86,8 @@
   }
   
   function openViewModal(log: any) {
+    // Save the user ID in localStorage
+    localStorage.setItem('lastViewedLogUserId', log.id);
     goto(`/user-logs/log-info?id=${log.id}`);
   }
   

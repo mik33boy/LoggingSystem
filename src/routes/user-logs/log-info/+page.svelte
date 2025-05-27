@@ -7,11 +7,15 @@
     let log: any = null;
     let loading = true;
     let error: string | null = null;
+    let userId: string | null = null;
 
     onMount(async () => {
+        // Get user ID from localStorage
+        userId = localStorage.getItem('user-id');
+        
         const logId = $page.url.searchParams.get('id');
         if (!logId) {
-            error = 'No log ID provided';
+            error = 'No log ID provided';   
             loading = false;
             return;
         }
@@ -50,7 +54,7 @@
                 <div class="flex items-center gap-4">
                     <div class="flex items-center text-gray-600 text-sm">
                         <span class="inline-flex items-center px-2.5 py-1 rounded-full text-sm font-medium bg-gray-200 text-gray-700">
-                            <svg class="w-4 h-4 mr-1 text-gray-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <svg class="w-4 h-4 mr-1 text-ggray-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                                 <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2h2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
                             </svg>
                             LogSystem
@@ -63,7 +67,13 @@
                 </div>
             </div>
 
-          
+            {#if !loading && !error && log}
+                <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-4 mb-4">
+                    <h2 class="text-md font-semibold text-gray-800 mb-2">Client Information</h2>
+                    <p class="text-sm text-gray-700">Client Name: {log.client_name || "N/A"}</p>
+                    <p class="text-sm text-gray-700">Client Email: sample.email@example.com</p>
+                </div>
+            {/if}
         </div>
     </div>
 </div>
