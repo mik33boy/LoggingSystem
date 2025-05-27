@@ -275,9 +275,9 @@ try {
             $stmt = $pdo->prepare("
                 INSERT INTO logs (
                     user_id, direction, type, subject, content, 
-                    sender, recipient, confidentiality_level, created_at
+                    sender, recipient, confidentiality_level, created_at, client_name
                 ) VALUES (
-                    ?, ?, ?, ?, ?, ?, ?, ?, NOW()
+                    ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?
                 )
             ");
             
@@ -289,7 +289,8 @@ try {
                 $data['content'] ?? null,
                 $data['sender'] ?? null,
                 $data['recipient'] ?? null,
-                $data['confidential'] ? 'confidential' : 'public'
+                $data['confidential'] ? 'confidential' : 'public',
+                $data['client_name'] ?? null
             ]);
             
             $logId = $pdo->lastInsertId();

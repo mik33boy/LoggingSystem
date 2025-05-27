@@ -25,7 +25,8 @@
   let otherType: string = '';
   let emailAddress: string = '';
   let phoneNumber: string = '';
-
+  let clientName: string = '';
+  
   // Contacts for autocomplete
   const contacts = [
     "client@abc.com",
@@ -101,7 +102,8 @@
         sender: direction === 'Incoming' ? fromTo : null,
         recipient: direction === 'Outgoing' ? fromTo : null,
         confidential,
-        fullName: `${currentUser.firstName} ${currentUser.lastName}`.trim()
+        fullName: `${currentUser.firstName} ${currentUser.lastName}`.trim(),
+        client_name: clientName
       };
 
       let body: FormData | string;
@@ -111,10 +113,10 @@
         body = new FormData();
         Object.entries(data).forEach(([key, value]) => {
           if (value !== undefined && value !== null) {
-            body.append(key, value as string);
+            (body as FormData).append(key, value as string);
           }
         });
-        body.append('attachment', attachment);
+        (body as FormData).append('attachment', attachment);
         // Do not set Content-Type header for FormData (browser will set it)
       } else {
         body = JSON.stringify(data);
@@ -171,7 +173,8 @@
       log.timestamp.toLowerCase().includes(searchQuery.toLowerCase()) ||
       log.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
       log.direction.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      log.subject.toLowerCase().includes(searchQuery.toLowerCase());
+      log.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (log.client_name && log.client_name.toLowerCase().includes(searchQuery.toLowerCase()));
 
     // Date and time filtering
     let matchesDate = true;
@@ -408,20 +411,21 @@
         <table class="min-w-full text-sm text-left text-gray-700 align-middle">
           <thead class="text-xs uppercase bg-gradient-to-r from-teal-800 to-blue-900 text-white font-bold tracking-wider border-b border-teal-900">
             <tr>
-              <th scope="col" class="px-6 py-4 cursor-pointer select-none whitespace-nowrap text-left" on:click={() => sortBy('fullName')}>Full Name {#if sortColumn === 'fullName'}{sortDirection === 'asc' ? ' ▲' : ' ▼'}{/if}</th>
+              <th scope="col" class="px-6 py-4 cursor-pointer select-none whitespace-nowrap text-left" on:click={() => sortBy('client_name')}>Client Name {#if sortColumn === 'client_name'}{sortDirection === 'asc' ? ' ▲' : ' ▼'}{/if}</th>
               <th scope="col" class="px-6 py-4 cursor-pointer select-none whitespace-nowrap text-left" on:click={() => sortBy('timestamp')}>Timestamp {#if sortColumn === 'timestamp'}{sortDirection === 'asc' ? ' ▲' : ' ▼'}{/if}</th>
               <th scope="col" class="px-6 py-4 cursor-pointer select-none whitespace-nowrap text-left" on:click={() => sortBy('type')}>Type {#if sortColumn === 'type'}{sortDirection === 'asc' ? ' ▲' : ' ▼'}{/if}</th>
               <th scope="col" class="px-6 py-4 cursor-pointer select-none whitespace-nowrap text-left" on:click={() => sortBy('direction')}>Direction {#if sortColumn === 'direction'}{sortDirection === 'asc' ? ' ▲' : ' ▼'}{/if}</th>
               <th scope="col" class="px-6 py-4 cursor-pointer select-none whitespace-nowrap text-left" on:click={() => sortBy('fromTo')}>From / To {#if sortColumn === 'fromTo'}{sortDirection === 'asc' ? ' ▲' : ' ▼'}{/if}</th>
-              <th scope="col" class="px-6 py-4 cursor-pointer select-none whitespace-nowrap text-left" on:click={() => sortBy('summary')}>Summary {#if sortColumn === 'summary'}{sortDirection === 'asc' ? ' ▲' : ' ▼'}{/if}</th>
+              <th scope="col" class="px-6 py-4 cursor-pointer select-none whitespace-nowrap text-left" on:click={() => sortBy('subject')}>Subject {#if sortColumn === 'subject'}{sortDirection === 'asc' ? ' ▲' : ' ▼'}{/if}</th>
               <th scope="col" class="px-6 py-4 whitespace-nowrap text-left">Actions</th>
               <th scope="col" class="px-6 py-4 whitespace-nowrap text-left">Report</th>
+              <th scope="col" class="px-6 py-4 cursor-pointer select-none whitespace-nowrap text-left" on:click={() => sortBy('fullName')}>Logged By {#if sortColumn === 'fullName'}{sortDirection === 'asc' ? ' ▲' : ' ▼'}{/if}</th>
             </tr> 
           </thead>
           <tbody>
             {#each filteredLogs as log, i}
               <tr class="border-b border-teal-100 {i % 2 === 1 ? 'bg-teal-50' : 'bg-white'}">
-                <td class="px-6 py-4 align-middle whitespace-nowrap text-left">{log.fullName || '--'}</td>
+                <td class="px-6 py-4 align-middle whitespace-nowrap text-left">{log.client_name || '--'}</td>
                 <td class="px-6 py-4 font-mono align-middle whitespace-nowrap text-left">{log.timestamp}</td>
                 <td class="px-6 py-4 align-middle whitespace-nowrap text-left">{log.type}</td>
                 <td class="px-6 py-4 align-middle whitespace-nowrap text-left">{log.direction}</td>
@@ -443,6 +447,7 @@
                     Generate
                   </button>
                 </td>
+                <td class="px-6 py-4 align-middle whitespace-nowrap text-left">{log.fullName || '--'}</td>
               </tr>
             {/each}
           </tbody>
@@ -474,6 +479,11 @@
               <div class="mb-4 p-2 bg-red-100 text-red-700 rounded text-sm">Error: Please fill all required fields.</div>
             {/if}
             <form on:submit|preventDefault={handleSubmit} class="space-y-6">
+              <!-- Add Client Name input field -->
+              <div>
+                <label class="block text-sm font-medium mb-1">Client Name</label>
+                <input type="text" bind:value={clientName} class="form-input w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-blue-500 transition" placeholder="Name of the client" />
+              </div>
               <!-- Communication Details -->
               <div>
                 <h3 class="text-base font-semibold text-gray-700 mb-2 border-b pb-1 border-gray-200">Communication Details</h3>
