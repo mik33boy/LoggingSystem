@@ -71,7 +71,7 @@ npm run tauri dev
 
 ## 🙏 Acknowledgments
 
-Special thanks to Sir Arnie Armada for guidance and support.
+Sir Arnie Armada
 
 ## 📝 Development Guidelines
 
@@ -85,10 +85,3 @@ Special thanks to Sir Arnie Armada for guidance and support.
    - Follow consistent code formatting
    - Write clean, maintainable code
 
-## 📄 License
-
-[Add your license information here]
-
-## 🤝 Contributing
-
-[Add contribution guidelines here]
