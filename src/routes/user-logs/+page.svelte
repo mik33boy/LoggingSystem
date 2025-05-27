@@ -424,7 +424,6 @@
               <th scope="col" class="px-6 py-4 cursor-pointer select-none whitespace-nowrap text-left" on:click={() => sortBy('fromTo')}>From / To {#if sortColumn === 'fromTo'}{sortDirection === 'asc' ? ' ▲' : ' ▼'}{/if}</th>
               <th scope="col" class="px-6 py-4 cursor-pointer select-none whitespace-nowrap text-left" on:click={() => sortBy('subject')}>Subject {#if sortColumn === 'subject'}{sortDirection === 'asc' ? ' ▲' : ' ▼'}{/if}</th>
               <th scope="col" class="px-6 py-4 whitespace-nowrap text-left">Actions</th>
-              <th scope="col" class="px-6 py-4 whitespace-nowrap text-left">Report</th>
               <th scope="col" class="px-6 py-4 cursor-pointer select-none whitespace-nowrap text-left" on:click={() => sortBy('fullName')}>Logged By {#if sortColumn === 'fullName'}{sortDirection === 'asc' ? ' ▲' : ' ▼'}{/if}</th>
             </tr> 
           </thead>
@@ -442,16 +441,6 @@
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                     View
                   </a>
-                  <a href="#" class="inline-flex items-center gap-1 font-medium text-teal-700 bg-teal-100 hover:bg-teal-200 rounded-full px-3 py-1 transition shadow-sm" on:click|preventDefault={() => deleteLog(log.id)}>
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg>
-                    Delete
-                  </a>
-                </td>
-                <td class="px-6 py-4 align-middle whitespace-nowrap text-left">
-                  <button type="button" class="inline-flex items-center gap-1 text-white bg-gradient-to-r from-teal-700 to-blue-700 hover:from-teal-800 hover:to-blue-900 font-semibold rounded-full text-xs px-5 py-1.5 text-center shadow transition" on:click={() => openReportModal(log)}>
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
-                    Generate
-                  </button>
                 </td>
                 <td class="px-6 py-4 align-middle whitespace-nowrap text-left">{log.fullName || '--'}</td>
               </tr>
