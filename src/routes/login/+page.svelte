@@ -81,7 +81,7 @@
 </script>
 
 <!-- Login form container with styling -->
-<div class="min-h-screen flex items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+<div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
   <div class="max-w-md w-full bg-white rounded-3xl shadow-lg p-10 relative overflow-hidden">
     <!-- Login form header -->
     <div class="mb-12">

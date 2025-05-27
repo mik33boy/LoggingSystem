@@ -86,8 +86,12 @@
   }
   
   function openViewModal(log: any) {
+    // Save the client name in localStorage
+    if (log.client_name) {
+      localStorage.setItem('selectedClientName', log.client_name);
+      console.log('Selected client name:', log.client_name);
+    }
     // Save the user ID in localStorage
-    localStorage.setItem('lastViewedLogUserId', log.id);
     goto(`/user-logs/log-info?id=${log.id}`);
   }
   
