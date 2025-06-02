@@ -130,6 +130,55 @@
         messageInput = ''; // Optionally clear the input field
     }
 
+    // Function to handle sending a reply
+    async function sendReply() {
+        if (!messageInput.trim() || !log) {
+            // Don't send if message is empty or log is not loaded
+            return;
+        }
+
+        // Construct the reply data based on the backend requirements
+        const replyData = {
+            action: 'add_reply', // Specify the action for the backend
+            log_id: log.id, // From the current log
+            log_subject: log.subject || 'No Subject', // From the current log
+            logs_description: messageInput, // From the input field
+            client_name: log.client_name || 'N/A' // From the current log
+            // logged_by and created_at will be handled by the backend
+        };
+
+        try {
+            // Set isReplying to false temporarily while sending to prevent new replies until success
+            isReplying = false;
+            const response = await apiRequest(`${API_ENDPOINTS.LOGS}?action=add_reply`, {
+                method: 'POST',
+                body: JSON.stringify(replyData)
+            });
+
+            if (response.success) {
+                console.log('Reply sent successfully:', response.data);
+                messageInput = ''; // Clear the input field
+                // Refresh the replies list
+                fetchReplies(log.id);
+            } else {
+                // Handle error response
+                console.error('Failed to send reply:', response.error);
+                alert('Failed to send reply: ' + (response.error || 'Unknown error'));
+                // Revert isReplying if sending failed and it was set to true before sending
+                 if (messageInput.trim()) { // Only if there was content before clearing
+                    isReplying = true;
+                }
+            }
+        } catch (err: any) {
+            console.error('Error sending reply:', err);
+            alert('Error sending reply: ' + (err.message || 'Network error'));
+             // Revert isReplying if sending failed
+             if (messageInput.trim()) { // Only if there was content before clearing
+                isReplying = true;
+            }
+        }
+    }
+
 </script>
 
 <div class="flex h-screen bg-gray-50">
@@ -377,7 +426,11 @@
                                 bind:value={messageInput}
                                 rows="3"
                             ></textarea>
-                            <button class="p-2 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-full hover:shadow-md transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                            <button
+                                class="p-2 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-full hover:shadow-md transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+                                on:click={sendReply}
+                                disabled={!messageInput.trim()}
+                            >
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M12 5l7 7-7 7" />
                                 </svg>

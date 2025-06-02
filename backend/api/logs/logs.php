@@ -278,8 +278,53 @@ try {
                     header('Content-Type: application/json');
                     echo json_encode(['success' => true, 'data' => $replies]);
                 } else {
-                    header('Content-Type: application/json');
-                    echo json_encode(['success' => true, 'data' => []]);
+                    returnError(404, 'No replies found for this log_id');
+                }
+            } else if ($action === 'add_reply') {
+                try {
+                    $data = json_decode(file_get_contents('php://input'), true);
+
+                    if ($data === null && json_last_error() !== JSON_ERROR_NONE) {
+                        returnError(400, 'Invalid JSON input: ' . json_last_error_msg());
+                    }
+
+                    // Validate required fields for a reply
+                    $required_reply_fields = ['log_id', 'log_subject', 'logs_description', 'client_name'];
+                    foreach ($required_reply_fields as $field) {
+                        if (!isset($data[$field])) {
+                            returnError(400, "Missing required field for reply: $field");
+                        }
+                    }
+
+                    // Insert the reply into logs_replies table
+                    $stmt = $pdo->prepare("
+                        INSERT INTO logs_replies (
+                            log_id, log_subject, logs_description, client_name, logged_by, created_at
+                        ) VALUES (
+                            ?, ?, ?, ?, ?, NOW()
+                        )
+                    ");
+
+                    $stmt->execute([
+                        $data['log_id'],
+                        $data['log_subject'],
+                        $data['logs_description'],
+                        $data['client_name'],
+                        $user['firstname'] . ' ' . $user['lastname'] // Logged in user's full name
+                    ]);
+
+                    $replyId = $pdo->lastInsertId();
+
+                    // Optionally fetch the newly created reply to return
+                    $stmt = $pdo->prepare("SELECT * FROM logs_replies WHERE logs_rep = ?");
+                    $stmt->execute([$replyId]);
+                    $newReply = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                    echo json_encode(['success' => true, 'data' => $newReply]);
+                } catch (PDOException $e) {
+                    returnError(500, 'Database error adding reply: ' . $e->getMessage());
+                } catch (Exception $e) {
+                    returnError(400, 'Error adding reply: ' . $e->getMessage());
                 }
             } else if (isset($_GET['id'])) {
                 // Get a single log by ID
