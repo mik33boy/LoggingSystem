@@ -12,59 +12,57 @@
     let replies: any[] = []; // Variable to store replies
     let loadingReplies = false; // Loading state for replies
     let repliesError: string | null = null; // Error state for replies
+    let messageInput: string = ''; // Variable to bind to the message input field
+    let isReplying: boolean = false; // State variable for replying
+
+    // Function to fetch replies for a given log ID
+    async function fetchReplies(logId: string) {
+        loadingReplies = true;
+        repliesError = null;
+        try {
+            const response = await apiRequest(`${API_ENDPOINTS.LOGS}?action=replies&log_id=${logId}`, {
+                method: 'POST' // The backend endpoint for replies expects POST
+            });
+            if (response.success) {
+                replies = response.data;
+            } else {
+                // Check for the specific 'no replies found' error
+                if (response.error === 'No replies found for this log_id') {
+                    replies = []; // Set replies to empty array
+                    repliesError = null; // Clear the error
+                } else {
+                    repliesError = response.error || 'Failed to fetch replies';
+                }
+            }
+        } catch (err: any) {
+            repliesError = err.message || 'Error fetching replies';
+            console.error('Error fetching replies:', err);
+        } finally {
+            loadingReplies = false;
+        }
+    }
 
     onMount(async () => {
-        loading = true;
-        try {
-            const logId = $page.url.searchParams.get('id');
-            if (!logId) {
-                error = 'No log ID provided';
-                loading = false;
-                return;
-            }
-            
-            const response = await apiRequest(`${API_ENDPOINTS.LOGS}?id=${logId}`, {
-                method: 'GET'
-            });
-            
+        const logId = localStorage.getItem('logId') || $page.params.id;
+        console.log('Fetching log with ID:', logId);
+        if (!logId) {
+            error = 'Log ID not provided';  
+            loading = false;
+            return;
+        }
+
+        try {   
+            const response = await apiRequest(`${API_ENDPOINTS.LOGS}?id=${logId}`);
             if (response.success) {
-                log = response.data[0]; // Assuming the backend returns an array with one log
-
-                // Fetch replies after fetching the main log if log is successful
-                if (log && log.client_name) {
-                    loadingReplies = true;
-                    try {
-                        // Use client_name from the fetched log instead of local storage
-                        const clientName = log.client_name;
-                        console.log('Fetching replies for client:', clientName);
-
-                        if (clientName) {
-                            const repliesResponse = await apiRequest(`${API_ENDPOINTS.LOGS}?action=getReplies&client_name=${encodeURIComponent(clientName)}`, {
-                                method: 'GET'
-                            });
-
-                            if (repliesResponse.success) {
-                                replies = repliesResponse.data;
-                            } else {
-                                repliesError = 'Failed to load replies';
-                            }
-                        } else {
-                            repliesError = 'Client name not available for fetching replies.';
-                        }
-                    } catch (err) {
-                        repliesError = 'Error loading replies';
-                        console.error(err);
-                    } finally {
-                        loadingReplies = false;
-                    }
-                }
-
+                log = response.data;
+                // Fetch replies after successfully fetching the log
+                fetchReplies(logId);
             } else {
-                error = 'Failed to load log details';
-            }
-        } catch (err) {
-            error = 'Error loading log details';
-            console.error(err);
+                error = response.error || 'Failed to fetch log details';            
+            }                   
+        } catch (err: any) {
+            error = err.message || 'Error fetching log details';
+            console.error('Error fetching log details:', err);
         } finally {
             loading = false;
         }
@@ -82,6 +80,10 @@
     function handleReply(id: string) {
         // Implement the logic to reply to the message
         console.log(`Reply to message with id: ${id}`);
+        if (log && log.subject) {
+            // messageInput = `Re: ${log.subject}`; // Populate input with reply subject
+            isReplying = true; // Set isReplying to true
+        }
     }
 
     function handleConfidential(id: string) {
@@ -111,26 +113,6 @@
         }
     }
 
-    async function handleGenerateReport(id: string) {
-        try {
-            const response = await apiRequest(`${API_ENDPOINTS.LOGS}/report?id=${id}`, {
-                method: 'GET'
-            });
-            
-            if (response.success) {
-                // Handle the report data - you might want to download it or show it in a modal
-                const reportData = response.data;
-                // For now, we'll just log it
-                console.log('Report generated:', reportData);
-                alert('Report generated successfully');
-            } else {
-                alert('Failed to generate report');
-            }
-        } catch (err) {
-            console.error('Error generating report:', err);
-            alert('Error generating report');
-        }
-    }
 
     // Helper function to format date and time
     function formatDateTime(dateTimeString: string): { date: string, time: string } {
@@ -141,6 +123,11 @@
             date: date.toLocaleDateString(undefined, optionsDate),
             time: date.toLocaleTimeString(undefined, optionsTime)
         };
+    }
+
+    function clearReply() {
+        isReplying = false; // Function to clear the reply state
+        messageInput = ''; // Optionally clear the input field
     }
 
 </script>
@@ -179,7 +166,7 @@
                 </div>
 
                 <!-- Messenger Interface -->
-                <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-4">
+                <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-4 flex flex-col h-[700px]">
                     <div class="flex items-center justify-between mb-4">
                         <h2 class="text-md font-semibold text-gray-800">Conversation History</h2>
                         <div class="flex items-center gap-4">
@@ -234,12 +221,20 @@
                                             <li>
                                                 <button 
                                                     class="flex items-center w-full text-left px-4 py-2 hover:bg-gray-100"
-                                                    on:click={() => handleGenerateReport(log.id)}
+                                                
                                                 >
                                                     <svg class="w-4 h-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                                     </svg>
                                                     Generate Report
+                                                </button>
+                                            </li>
+                                            <li>
+                                                <button class="flex items-center w-full text-left px-4 py-2 hover:bg-gray-100" on:click={() => handleConfidential(log.id)}>
+                                                    <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                                                    </svg>
+                                                    Set as Confidential
                                                 </button>
                                             </li>
                                         </ul>
@@ -251,7 +246,7 @@
                     </div>
 
                     <!-- Messages Container -->
-                    <div class="space-y-6 h-[420px] overflow-y-auto p-4 bg-gray-50 rounded-xl">
+                    <div class="space-y-6 overflow-y-auto p-4 bg-gray-50 rounded-xl flex-1">
                         <!--  Messages -->
                         <div class="flex flex-col space-y-6">
                             <!--  Received Message -->
@@ -268,28 +263,17 @@
                                             <h3 class="text-sm font-semibold text-gray-900">{log.subject || "No Subject"}</h3>
                                             <!-- Options Menu -->
                                             <div class="relative">
-                                                <button class="p-1 rounded-full hover:bg-gray-100 focus:outline-none" on:click|stopPropagation={(e) => toggleOptions(e, log.id)}>
-                                                    <svg class="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path d="M10 6a2 2 0 110-4 2 2 0 010 4zm0 6a2 2 0 110-4 2 2 0 010 4zm0 6a2 2 0 110-4 2 2 0 010 4z"/>
+                                                <button class="flex items-center w-full text-left px-4 py-2 hover:bg-gray-100" on:click={() => handleReply(log.id)}>
+                                                    <svg class="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4-4m0 0l-4-4m4 4H9a7 7 0 00-7 7v2" />
                                                     </svg>
+                                                    Reply
                                                 </button>
-                                                {#if activeOptionsId === log.id}
-                                                <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10">
-                                                    <ul class="py-1 text-sm text-gray-700">
-                                                        <li>
-                                                            <button class="block w-full text-left px-4 py-2 hover:bg-gray-100" on:click={() => handleReply(log.id)}>Reply</button>
-                                                        </li>
-                                                        <li>
-                                                            <button class="block w-full text-left px-4 py-2 hover:bg-gray-100" on:click={() => handleConfidential(log.id)}>Mark as Confidential</button>
-                                                        </li>
-                                                    </ul>
-                                                </div>
-                                                {/if}
                                             </div>
                                         </div>
                                         
                                         <!-- Description -->
-                                        <p class="text-sm text-gray-700 leading-relaxed mb-3">{log.content || "No Content"}</p>
+                                        <p class="text-sm text-gray-700 leading-relaxed mb-3 whitespace-pre-wrap break-words">{log.content || "No Content"}</p>
                                         
                                         <!-- File Attachment -->
                                         {#if log.attachment}
@@ -374,6 +358,12 @@
                     </div>
 
                     <!-- Message Input -->
+                    {#if isReplying}
+                    <div class="flex items-center justify-between text-sm text-white bg-gray-700 p-2 mb-4 rounded-md">
+                        <span>Replying to Re: {log.subject || 'No Subject'}</span>
+                        <button class="text-gray-300 hover:text-white" on:click={clearReply}>×</button>
+                    </div>
+                    {/if}
                     <div class="mt-4 border-t pt-4">
                         <div class="flex items-center gap-3">
                             <button class="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200">
@@ -381,14 +371,15 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                                 </svg>
                             </button>
-                            <input 
-                                type="text" 
+                            <textarea 
                                 placeholder="Type your message..." 
-                                class="flex-1 border border-gray-300 rounded-full px-5 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                            />
-                            <button class="p-2.5 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-full hover:shadow-md transition-all duration-200">
+                                class="flex-1 border border-gray-300 rounded-xl px-5 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none min-h-[80px] max-h-[200px]"
+                                bind:value={messageInput}
+                                rows="3"
+                            ></textarea>
+                            <button class="p-2 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-full hover:shadow-md transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M12 5l7 7-7 7" />
                                 </svg>
                             </button>
                         </div>

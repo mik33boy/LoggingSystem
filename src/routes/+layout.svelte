@@ -14,7 +14,7 @@
 		{#if $page.url.pathname !== '/login'}
 			<UserHeader />
 		{/if}
-		<main class="flex-1 h-screen p-8">
+		<main class="">
 			<slot />
 		</main>
 	</div>

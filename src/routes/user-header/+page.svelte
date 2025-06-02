@@ -68,19 +68,6 @@
         } catch {}
       }
 
-      // Optionally, fetch from API if you have a /api/user endpoint
-      // const response = await fetch('/api/user', {
-      //   headers: {
-      //     'Authorization': `Bearer ${token}`
-      //   }
-      // });
-      // if (response.ok) {
-      //   const data = await response.json();
-      //   user = {
-      //     ...data,
-      //     avatar: data.avatar || `https://ui-avatars.com/api/?name=${data.firstname}+${data.lastname}`
-      //   };
-      // }
     } catch (err) {
       console.error('Error loading user:', err);
     }

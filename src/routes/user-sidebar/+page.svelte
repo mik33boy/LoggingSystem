@@ -7,6 +7,15 @@
   let currentTime = new Date().toLocaleTimeString();
   let currentDate = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
+  // User info
+  let user = {
+    firstname: '',
+    lastname: '',
+    email: '',
+    avatar: ''
+  };
+  let userStatus = 'online';
+
   const menuItems = [
     { 
       icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6', 
@@ -34,7 +43,35 @@
     }
   ];
     
+  function handleImageError(event: Event) {
+    const img = event.target as HTMLImageElement;
+    img.src = 'https://ui-avatars.com/api/?name=U';
+  }
+
   onMount(() => {
+    // Load user data
+    (async () => {
+      try {
+        const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+        if (!token) return;
+
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+          try {
+            const userObj = JSON.parse(userStr);
+            user = {
+              firstname: userObj.firstName || userObj.firstname || '',
+              lastname: userObj.lastName || userObj.lastname || '',
+              email: userObj.email || '',
+              avatar: userObj.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent((userObj.firstName || userObj.firstname || '') + ' ' + (userObj.lastName || userObj.lastname || ''))}`
+            };
+          } catch {}
+        }
+      } catch (err) {
+        console.error('Error loading user:', err);
+      }
+    })();
+
     const checkMobile = () => {
       isMobile = window.innerWidth < 768;
       if (isMobile) {
@@ -108,19 +145,20 @@
         <div class="bg-gradient-to-r from-cyan-800 to-cyan-900 rounded-2xl p-4 shadow-lg">
           <div class="flex items-center space-x-4">
             <div class="relative">
-              <div class="w-16 h-16 rounded-full bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center text-2xl font-bold text-white shadow-lg">
-                U
-              </div>
+              <img
+                class="w-16 h-16 rounded-full ring-2 ring-cyan-400"
+                src={user.avatar}
+                alt="User avatar"
+                on:error={handleImageError}
+              />
               <div class="absolute bottom-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-cyan-900"></div>
             </div>
             <div class="flex-1 min-w-0">
-              <p class="text-sm font-medium text-cyan-100 truncate">User Name</p>
-              <p class="text-xs text-cyan-300 truncate">user@example.com</p>
+              <p class="text-sm font-medium text-cyan-100 truncate">{user.firstname} {user.lastname}</p>
+              <p class="text-xs text-cyan-300 truncate">{user.email}</p>
+              <p class="text-2xs text-cyan-300 truncate">{currentTime}</p>
+              <p class="text-2xs text-cyan-300 truncate">{currentDate}</p>
             </div>
-          </div>
-          <div class="mt-4 text-xs text-cyan-300">
-            <p>{currentTime}</p>
-            <p>{currentDate}</p>
           </div>
         </div>
       </div>

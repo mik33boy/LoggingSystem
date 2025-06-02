@@ -1,7 +1,7 @@
 <?php
 // Suppress errors and warnings
-error_reporting(0);
-ini_set('display_errors', 0);
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
 // Add CORS headers
 header('Access-Control-Allow-Origin: http://localhost:5173');
@@ -86,58 +86,27 @@ try {
                 
                 header('Content-Type: application/json');
                 echo json_encode(['success' => true, 'data' => $stats]);
-            } else if ($action === 'getByClient') {
-                // Get client name from query parameter
-                $clientName = isset($_GET['client_name']) ? $_GET['client_name'] : null;
-                
-                if (!$clientName) {
-                    returnError(400, 'Client name is required');
-                }
+            }  else if (isset($_GET['id'])) {
+                // Get a single log by ID
+                $stmt = $pdo->prepare("SELECT l.*, CONCAT(u.firstname, ' ', u.lastname) AS fullName, l.created_at AS timestamp FROM logs l JOIN users u ON l.user_id = u.id WHERE l.id = ?");
+                $stmt->execute([$_GET['id']]);
+                $log = $stmt->fetch(PDO::FETCH_ASSOC);
 
-                // Get logs for the user filtered by client name
-                $stmt = $pdo->prepare("
-                    SELECT l.*, CONCAT(u.firstname, ' ', u.lastname) AS fullName, l.created_at AS timestamp
-                    FROM logs l
-                    JOIN users u ON l.user_id = u.id
-                    WHERE l.user_id = ? AND l.client_name = ?
-                    ORDER BY l.created_at DESC
-                ");
-                $stmt->execute([$user['id'], $clientName]);
-                $logs = $stmt->fetchAll(PDO::FETCH_ASSOC);
-                
-                header('Content-Type: application/json');
-                echo json_encode(['success' => true, 'data' => $logs]);
-            } else if ($action === 'getReplies') {
-                // Get client name from query parameter
-                $clientName = isset($_GET['client_name']) ? $_GET['client_name'] : null;
-                
-                if (!$clientName) {
-                    returnError(400, 'Client name is required');
+                if ($log) {
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => true, 'data' => $log]);
+                } else {
+                    returnError(404, 'Log not found');
                 }
-
-                // Get logs for the user filtered by client name
-                $stmt = $pdo->prepare("
-                    SELECT l.*, CONCAT(u.firstname, ' ', u.lastname) AS fullName, l.created_at AS timestamp
-                    FROM logs_replies l
-                    JOIN users u ON l.user_id = u.id
-                    WHERE l.client_name = ?
-                    ORDER BY l.created_at DESC
-                ");
-                $stmt->execute([$clientName]);
-                $logs = $stmt->fetchAll(PDO::FETCH_ASSOC);
-                
-                header('Content-Type: application/json');
-                echo json_encode(['success' => true, 'data' => $logs]);
             } else {
                 // Get all logs for the user, join users for full name, alias created_at as timestamp
                 $stmt = $pdo->prepare("
                     SELECT l.*, CONCAT(u.firstname, ' ', u.lastname) AS fullName, l.created_at AS timestamp
                     FROM logs l
                     JOIN users u ON l.user_id = u.id
-                    WHERE l.user_id = ? 
                     ORDER BY l.created_at DESC
                 ");
-                $stmt->execute([$user['id']]);
+                $stmt->execute();
                 $logs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 
                 header('Content-Type: application/json');
@@ -182,9 +151,6 @@ try {
                     ];
                     $csv = '"' . implode('","', $headers) . "\n";
                     $csv .= '"' . implode('","', $values) . "\n";
-
-                    header('Content-Type: text/csv');
-                    header('Content-Disposition: attachment; filename="log-report-' . $log['id'] . '.csv"');
                     echo $csv;
                     exit();
                 } else {
@@ -226,8 +192,6 @@ try {
                     $pdf->writeHTML($html, true, false, true, false, '');
 
                     // Close and output PDF document
-                    header('Content-Type: application/pdf');
-                    header('Content-Disposition: attachment; filename="log-report-' . $log['id'] . '.pdf"');
                     $pdf->Output('log-report-' . $log['id'] . '.pdf', 'I');
                     exit();
                 }
@@ -247,7 +211,7 @@ try {
                 $logs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 if (!$logs) {
                     returnError(404, 'No logs found');
-                }
+                } 
                 if ($format === 'excel') {
                     if (ob_get_length()) ob_end_clean();
                     function csvEscape($value) {
@@ -298,7 +262,41 @@ try {
                     $pdf->Output('log-summary-report.pdf', 'I');
                     exit();
                 }
+            } else if ($action === 'replies') {
+                // Get log_id from the request
+                if (!isset($_GET['log_id'])) {
+                    returnError(400, 'Missing log_id');
+                }
+                $logId = $_GET['log_id'];
+
+                // Get replies for the log_id
+                $stmt = $pdo->prepare("SELECT * FROM logs_replies WHERE log_id = ?");
+                $stmt->execute([$logId]);
+                $replies = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                if ($replies) {
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => true, 'data' => $replies]);
+                } else {
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => true, 'data' => []]);
+                }
+            } else if (isset($_GET['id'])) {
+                // Get a single log by ID
+                $stmt = $pdo->prepare("SELECT l.*, CONCAT(u.firstname, ' ', u.lastname) AS fullName, l.created_at AS timestamp FROM logs l JOIN users u ON l.user_id = u.id WHERE l.id = ?");
+                $stmt->execute([$_GET['id']]);
+                $log = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                if ($log) {
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => true, 'data' => $log]);
+                } else {
+                    returnError(404, 'Log not found');
+                }
             }
+            break;
+
+        case 'POST':
             $data = json_decode(file_get_contents('php://input'), true);
             
             if ($data === null && json_last_error() !== JSON_ERROR_NONE) {
@@ -317,9 +315,9 @@ try {
             $stmt = $pdo->prepare("
                 INSERT INTO logs (
                     user_id, direction, type, subject, content, 
-                    sender, recipient, confidentiality_level, created_at, client_name
+                    sender, confidentiality_level, created_at, client_name, log_by
                 ) VALUES (
-                    ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?
+                    ?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?
                 )
             ");
             
@@ -330,9 +328,9 @@ try {
                 $data['subject'],
                 $data['content'] ?? null,
                 $data['sender'] ?? null,
-                $data['recipient'] ?? null,
                 $data['confidential'] ? 'confidential' : 'public',
-                $data['client_name'] ?? null
+                $data['client_name'] ?? null,
+                $user['firstname'] . ' ' . $user['lastname']
             ]);
             
             $logId = $pdo->lastInsertId();

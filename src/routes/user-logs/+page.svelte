@@ -12,6 +12,7 @@
   let searchQuery: string = '';
   let selectedDate: string = '';
   let selectedTime: string = '';
+  let logView: 'all' | 'my' | 'archive' | 'confidential' = 'all';
   
   // Modal state
   let showModal: boolean = false;
@@ -103,13 +104,11 @@
   }
   
   function openViewModal(log: any) {
-    // Save the client name in localStorage
-    if (log.client_name) {
-      localStorage.setItem('selectedClientName', log.client_name);
-      console.log('Selected client name:', log.client_name);
-    }
-    // Save the user ID in localStorage
+    // Save the log ID in localStorage
+    localStorage.setItem('logId', log.id.toString());
+    // Navigate to log info page
     goto(`/user-logs/log-info?id=${log.id}`);
+    console.log('Log ID:', log.id);
   }
   
   async function handleSubmit(e: Event) {
@@ -187,7 +186,18 @@
     });
   }
 
+  let selectedClientName: string = '';
   $: filteredLogs = logs.filter(log => {
+    // First filter by view type
+    let matchesView = true;
+    if (logView === 'my') {
+      matchesView = log.fullName === `${currentUser.firstName} ${currentUser.lastName}`.trim();
+    } else if (logView === 'confidential') {
+      matchesView = log.confidential === true;
+    } else if (logView === 'archive') {
+      matchesView = log.archived === true;
+    }
+
     const matchesType = selectedType === 'All Types' || log.type === selectedType;
     const matchesDirection = selectedDirection === 'All Directions' || log.direction === selectedDirection;
     const matchesSearch = searchQuery === '' ||
@@ -210,12 +220,21 @@
       matchesTime = logTime === selectedTime;
     }
 
-    return matchesType && matchesDirection && matchesSearch && matchesDate && matchesTime;
+    return matchesView && matchesType && matchesDirection && matchesSearch && matchesDate && matchesTime &&
+      (!selectedClientName || log.client_name === selectedClientName);
   });
 
   async function fetchLogs() {
     try {
-      const response = await apiRequest(API_ENDPOINTS.LOGS, {
+      // Get client name from local storage
+      const clientName = localStorage.getItem('client_name');
+      
+      let endpoint = API_ENDPOINTS.LOGS;
+      if (clientName) {
+        endpoint = `${API_ENDPOINTS.LOGS}?action=getByClient&client_name=${encodeURIComponent(clientName)}`;
+      }
+      
+      const response = await apiRequest(endpoint, {
         method: 'GET'
       });
       
@@ -404,6 +423,12 @@
 
       <!-- Filters and Search -->
       <div class="flex flex-wrap items-center gap-4 mb-8 bg-white p-4 rounded-xl shadow border border-gray-100 w-full">
+        <select bind:value={logView} class="form-select w-40 px-3 py-2 text-sm border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500">
+          <option value="all">All Logs</option>
+          <option value="my">My Logs</option>
+          <option value="archive">Archive</option>
+          <option value="confidential">Confidential</option>
+        </select>
         <select id="type" bind:value={selectedType} class="form-select w-40 px-3 py-2 text-sm border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500">
           <option>All Types</option>
           <option>Email</option>
