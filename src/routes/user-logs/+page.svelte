@@ -71,9 +71,26 @@
     fromTo = '';
     subject = '';
     details = '';
-    // Set default date/time to now
+    // Set default date/time to current Asia time (Asia/Manila)
     const now = new Date();
-    dateTime = now.toISOString().slice(0, 16);
+    // Get the date and time components in Asia/Manila timezone
+    const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23', timeZone: 'Asia/Manila' };
+    const asiaDateTimeParts = new Intl.DateTimeFormat('en-US', options).formatToParts(now);
+    
+    let year, month, day, hour, minute;
+    for (const part of asiaDateTimeParts) {
+      switch (part.type) {
+        case 'year': year = part.value; break;
+        case 'month': month = part.value; break;
+        case 'day': day = part.value; break;
+        case 'hour': hour = part.value; break;
+        case 'minute': minute = part.value; break;
+      }
+    }
+    
+    // Format for datetime-local input (YYYY-MM-DDTHH:mm)
+    dateTime = `${year}-${month}-${day}T${hour}:${minute}`;
+
     confidential = false;
     otherType = '';
     emailAddress = '';
