@@ -42,6 +42,30 @@ try {
 
 // Only allow POST requests
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    // Allow GET requests for getAllUsers action
+    if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['action'] === 'getAllUsers') {
+        try {
+            // Query to get all users
+            $sql = "SELECT id, username, email, firstname, lastname FROM users";
+            $result = $conn->query($sql);
+
+            if ($result) {
+                $users = [];
+                while ($row = $result->fetch_assoc()) {
+                    $users[] = $row;
+                }
+                echo json_encode([
+                    'success' => true,
+                    'data' => $users
+                ]);
+            } else {
+                returnError(500, 'Failed to fetch users');
+            }
+        } catch (Exception $e) {
+            returnError(500, 'Error fetching users: ' . $e->getMessage());
+        }
+        exit();
+    }
     returnError(405, 'Method not allowed');
 }
 

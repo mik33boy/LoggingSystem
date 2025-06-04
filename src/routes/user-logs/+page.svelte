@@ -45,8 +45,13 @@
     id: '',
     username: '',
     firstName: '',
-    lastName: ''
+    lastName: '',
+    email: ''
   };
+  
+  // Add showErrorModal state
+  let showErrorModal = false;
+  let errorMessage = '';
   
   function updateFilteredContacts(value: string) {
     if (!value) {
@@ -65,7 +70,6 @@
   }
   
   function openModal() {
-    console.log('Add Log button clicked');
     showModal = true;
     commType = '';
     direction = '';
@@ -103,12 +107,31 @@
     showModal = false;
   }
   
+  function showError(message: string) {
+    errorMessage = message;
+    showErrorModal = true;
+  }
+  
+  function closeErrorModal() {
+    showErrorModal = false;
+    errorMessage = '';
+  }
+  
   function openViewModal(log: any) {
-    // Save the log ID in localStorage
-    localStorage.setItem('logId', log.id.toString());
-    // Navigate to log info page
-    goto(`/user-logs/log-info?id=${log.id}`);
-    console.log('Log ID:', log.id);
+    // Check if log is private and user is authorized
+    if (log.confidentiality_level === 'private') {
+      const userEmail = currentUser.email;
+      const authorizedUsers = log.authorize_users ? log.authorize_users.split(',') : [];
+      
+      if (!authorizedUsers.includes(userEmail)) {
+        showError('You are not authorized to view this log');
+        return;
+      }
+    }
+    
+    // If authorized or not private, proceed with viewing
+    localStorage.setItem('logId', log.log_id.toString());
+    goto(`/user-logs/log-info?id=${log.log_id}`);
   }
   
   async function handleSubmit(e: Event) {
@@ -117,6 +140,7 @@
     try {
       const actualCommType = commType === 'other' ? otherType : commType;
       const data = {
+        action: 'addLog',
         direction,
         type: actualCommType,
         subject,
@@ -125,7 +149,8 @@
         recipient: direction === 'Outgoing' ? fromTo : null,
         confidential,
         fullName: `${currentUser.firstName} ${currentUser.lastName}`.trim(),
-        client_name: clientName
+        client_name: clientName,
+        timestamp: dateTime
       };
 
       let body: FormData | string;
@@ -145,19 +170,14 @@
         headers['Content-Type'] = 'application/json';
       }
 
-      const response = await fetch(API_ENDPOINTS.LOGS, {
+      const response = await apiRequest(`${API_ENDPOINTS.LOGS}?action=addLog`, {
         method: 'POST',
-        headers: {
-          ...headers,
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
+        headers,
         body
       });
 
-      const result = await response.json();
-
-      if (result.success) {
-        logs = [{ ...result.data, fullName: `${currentUser.firstName} ${currentUser.lastName}`.trim() }, ...logs];
+      if (response.success) {
+        logs = [{ ...response.data, fullName: `${currentUser.firstName} ${currentUser.lastName}`.trim() }, ...logs];
         closeModal();
       }
     } catch (error: any) {
@@ -220,23 +240,45 @@
       matchesTime = logTime === selectedTime;
     }
 
-    return matchesView && matchesType && matchesDirection && matchesSearch && matchesDate && matchesTime &&
-      (!selectedClientName || log.client_name === selectedClientName);
-  });
+    return matchesView && matchesType && matchesDirection && matchesSearch && matchesDate && matchesTime;
+  }).reduce((acc, log) => {
+    // If no client name, include the log
+    if (!log.client_name) {
+      acc.push(log);
+      return acc;
+    }
+
+    // Check if we already have a log for this client
+    const existingLogIndex = acc.findIndex((l: { client_name: string }) => l.client_name === log.client_name);
+    
+    if (existingLogIndex === -1) {
+      // No existing log for this client, add it
+      acc.push(log);
+    } else {
+      // Compare timestamps and keep the most recent one
+      const existingTimestamp = new Date(acc[existingLogIndex].timestamp).getTime();
+      const newTimestamp = new Date(log.timestamp).getTime();
+      
+      if (newTimestamp > existingTimestamp) {
+        // Replace the existing log with the newer one
+        acc[existingLogIndex] = log;
+      }
+    }
+    
+    return acc;
+  }, [] as any[]);
 
   async function fetchLogs() {
     try {
       // Get client name from local storage
       const clientName = localStorage.getItem('client_name');
       
-      let endpoint = API_ENDPOINTS.LOGS;
+      let endpoint = `${API_ENDPOINTS.LOGS}?action=getLogs`;
       if (clientName) {
-        endpoint = `${API_ENDPOINTS.LOGS}?action=getByClient&client_name=${encodeURIComponent(clientName)}`;
+        endpoint = `${API_ENDPOINTS.LOGS}?action=getLogs&client_name=${encodeURIComponent(clientName)}`;
       }
       
-      const response = await apiRequest(endpoint, {
-        method: 'GET'
-      });
+      const response = await apiRequest(endpoint);
       
       if (response.success) {
         logs = response.data;
@@ -256,7 +298,8 @@
           id: userObj.id || '',
           username: userObj.username || '',
           firstName: userObj.firstName || '',
-          lastName: userObj.lastName || ''
+          lastName: userObj.lastName || '',
+          email: userObj.email || ''
         };
       } catch {}
     }
@@ -465,19 +508,36 @@
               <th scope="col" class="px-6 py-4 cursor-pointer select-none whitespace-nowrap text-left" on:click={() => sortBy('direction')}>Direction {#if sortColumn === 'direction'}{sortDirection === 'asc' ? ' ▲' : ' ▼'}{/if}</th>
               <th scope="col" class="px-6 py-4 cursor-pointer select-none whitespace-nowrap text-left" on:click={() => sortBy('fromTo')}>From / To {#if sortColumn === 'fromTo'}{sortDirection === 'asc' ? ' ▲' : ' ▼'}{/if}</th>
               <th scope="col" class="px-6 py-4 cursor-pointer select-none whitespace-nowrap text-left" on:click={() => sortBy('subject')}>Subject {#if sortColumn === 'subject'}{sortDirection === 'asc' ? ' ▲' : ' ▼'}{/if}</th>
+              <th scope="col" class="px-6 py-4 whitespace-nowrap text-left">Confidentiality</th>
               <th scope="col" class="px-6 py-4 whitespace-nowrap text-left">Actions</th>
               <th scope="col" class="px-6 py-4 cursor-pointer select-none whitespace-nowrap text-left" on:click={() => sortBy('fullName')}>Logged By {#if sortColumn === 'fullName'}{sortDirection === 'asc' ? ' ▲' : ' ▼'}{/if}</th>
             </tr> 
           </thead>
           <tbody>
             {#each filteredLogs as log, i}
-              <tr class="border-b border-teal-100 {i % 2 === 1 ? 'bg-teal-50' : 'bg-white'}">
-                <td class="px-6 py-4 align-middle whitespace-nowrap text-left">{log.client_name || '--'}</td>
+              <tr class="border-b border-teal-100 {log.confidentiality_level === 'private' ? 'bg-gray-200' : (i % 2 === 1 ? 'bg-teal-50' : 'bg-white')}">
+                <td class="px-6 py-4 align-middle whitespace-nowrap text-left">
+                  {log.client_name || '--'}
+                </td>
                 <td class="px-6 py-4 font-mono align-middle whitespace-nowrap text-left">{log.timestamp}</td>
                 <td class="px-6 py-4 align-middle whitespace-nowrap text-left">{log.type}</td>
                 <td class="px-6 py-4 align-middle whitespace-nowrap text-left">{log.direction}</td>
                 <td class="px-6 py-4 align-middle whitespace-nowrap text-left">{log.sender || log.recipient || '--'}</td>
                 <td class="px-6 py-4 align-middle whitespace-nowrap text-left">{log.subject}</td>
+                <td class="px-6 py-4 align-middle whitespace-nowrap text-left">
+                  {#if log.confidentiality_level === 'private'}
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                      <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                      </svg>
+                      Private
+                    </span>
+                  {:else}
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
+                      Public
+                    </span>
+                  {/if}
+                </td>
                 <td class="px-6 py-4 align-middle whitespace-nowrap text-left flex gap-2">
                   <a href="#" class="inline-flex items-center gap-1 font-medium text-white bg-teal-700 hover:bg-teal-900 rounded-full px-3 py-1 transition shadow-sm" on:click|preventDefault={() => openViewModal(log)}>
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
@@ -505,7 +565,7 @@
       <!-- Add Log Modal -->
       {#if showModal}
         <div class="fixed inset-0 z-[10000] flex items-center justify-center bg-black bg-opacity-40 animate-fadeIn">
-          <div class="modal-content bg-white p-8 rounded-2xl w-full max-w-lg relative shadow-2xl border border-blue-100 max-h-[90vh] overflow-y-auto">
+          <div class="modal-content bg-white p-8 rounded-2xl w-full max-w-[1000px] relative shadow-2xl border border-blue-100 max-h-[90vh] overflow-y-auto">
             <button class="absolute top-3 right-3 text-gray-400 hover:text-gray-700 text-2xl font-bold transition-colors" on:click={closeModal}>&times;</button>
             <h2 class="text-2xl font-extrabold mb-1 text-blue-700 flex items-center gap-2">
               <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
@@ -518,8 +578,8 @@
             <form on:submit|preventDefault={handleSubmit} class="space-y-6">
               <!-- Add Client Name input field -->
               <div>
-                <label class="block text-sm font-medium mb-1">Client Name</label>
-                <input type="text" bind:value={clientName} class="form-input w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-blue-500 transition" placeholder="Name of the client" />
+                <label class="block text-sm font-medium mb-1">Client Name <span class="text-red-500">*</span></label>
+                <input type="text" bind:value={clientName} required class="form-input w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-blue-500 transition" placeholder="Name of the client" />
               </div>
               <!-- Communication Details -->
               <div>
@@ -527,7 +587,7 @@
                 <div class="grid grid-cols-1 gap-4 mt-2">
                   <div>
                     <label class="block text-sm font-medium mb-1">Type <span class="text-red-500">*</span></label>
-                    <select bind:value={commType} class="form-select w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-blue-500 transition">
+                    <select bind:value={commType} required class="form-select w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-blue-500 transition">
                       <option value="">Select Type</option>
                       <option value="Email">Email</option>
                       <option value="Fax">Fax</option>
@@ -535,12 +595,12 @@
                       <option value="other">Other</option>
                     </select>
                     {#if commType === 'other'}
-                      <input type="text" bind:value={otherType} class="form-input w-full mt-2 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-blue-500 transition" placeholder="Specify other type" />
+                      <input type="text" bind:value={otherType} required class="form-input w-full mt-2 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-blue-500 transition" placeholder="Specify other type" />
                     {/if}
                   </div>
                   <div>
                     <label class="block text-sm font-medium mb-1">Direction <span class="text-red-500">*</span></label>
-                    <select bind:value={direction} class="form-select w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-blue-500 transition">
+                    <select bind:value={direction} required class="form-select w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-blue-500 transition">
                       <option value="">Select Direction</option>
                       <option value="Incoming">Incoming</option>
                       <option value="Outgoing">Outgoing</option>
@@ -548,7 +608,7 @@
                   </div>
                   <div class="relative">
                     <label class="block text-sm font-medium mb-1">From / To <span class="text-red-500">*</span></label>
-                    <input type="text" bind:value={fromTo} class="form-input w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-blue-500 transition" placeholder="Email or phone" on:input={(e) => updateFilteredContacts(e.target && e.target instanceof HTMLInputElement ? e.target.value : '')} autocomplete="off" />
+                    <input type="text" bind:value={fromTo} required class="form-input w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-blue-500 transition" placeholder="Email or phone" on:input={(e) => updateFilteredContacts(e.target && e.target instanceof HTMLInputElement ? e.target.value : '')} autocomplete="off" />
                     <span class="text-xs text-gray-400">Enter an email or phone number. Suggestions will appear as you type.</span>
                     {#if showAutocomplete}
                       <ul class="absolute bg-white border rounded shadow mt-1 w-full z-10">
@@ -566,11 +626,11 @@
                 <div class="grid grid-cols-1 gap-4 mt-2">
                   <div>
                     <label class="block text-sm font-medium mb-1">Subject <span class="text-red-500">*</span></label>
-                    <input type="text" bind:value={subject} class="form-input w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-blue-500 transition" placeholder="Subject of the communication" />
+                    <input type="text" bind:value={subject} required class="form-input w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-blue-500 transition" placeholder="Subject of the communication" />
                   </div>
                   <div>
                     <label class="block text-sm font-medium mb-1">Details <span class="text-red-500">*</span></label>
-                    <textarea bind:value={details} class="form-input w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-blue-500 transition" rows="3" placeholder="Enter details here..."></textarea>
+                    <textarea bind:value={details} required class="form-input w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-blue-500 transition" rows="3" placeholder="Enter details here..."></textarea>
                   </div>
                   <div class="flex items-center gap-3 mt-2">
                     <input type="checkbox" bind:checked={confidential} id="confidential" class="accent-blue-600" />
@@ -580,7 +640,7 @@
               </div>
               <!-- Attachment -->
               <div>
-                <h3 class="text-base font-semibold text-gray-700 mb-2 border-b pb-1 border-gray-200">Attachment</h3>
+                <h3 class="text-base font-semibold text-gray-700 mb-2 border-b pb-1 border-gray-200">Attachment (Optional)</h3>
                 <div class="mt-2">
                   <label class="block text-sm font-medium mb-1" for="attachment">Upload File</label>
                   <input
@@ -599,7 +659,7 @@
                 <h3 class="text-base font-semibold text-gray-700 mb-2 border-b pb-1 border-gray-200">Date & Time</h3>
                 <div class="mt-2">
                   <label class="block text-sm font-medium mb-1">Date & Time <span class="text-red-500">*</span></label>
-                  <input type="datetime-local" bind:value={dateTime} class="form-input w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-blue-500 transition" />
+                  <input type="datetime-local" bind:value={dateTime} required class="form-input w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-blue-500 transition" />
                 </div>
               </div>
               <div class="flex justify-end gap-2 mt-8">
@@ -607,6 +667,27 @@
                 <button type="submit" class="px-6 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold shadow transition">Add Log</button>
               </div>
             </form>
+          </div>
+        </div>
+      {/if}
+
+      <!-- Add Error Modal -->
+      {#if showErrorModal}
+        <div class="fixed inset-0 z-[10000] flex items-center justify-center bg-black bg-opacity-40 animate-fadeIn">
+          <div class="bg-white p-6 rounded-xl shadow-xl max-w-md w-full mx-4 relative">
+            <button class="absolute top-3 right-3 text-gray-400 hover:text-gray-700 text-2xl font-bold transition-colors" on:click={closeErrorModal}>&times;</button>
+            <div class="flex items-center gap-3 mb-4">
+              <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+              </svg>
+              <h3 class="text-xl font-bold text-gray-900">Access Denied</h3>
+            </div>
+            <p class="text-gray-600 mb-6">{errorMessage}</p>
+            <div class="flex justify-end">
+              <button class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-semibold transition" on:click={closeErrorModal}>
+                Close
+              </button>
+            </div>
           </div>
         </div>
       {/if}

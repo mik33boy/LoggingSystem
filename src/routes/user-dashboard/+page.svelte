@@ -160,41 +160,7 @@ onMount(() => {
         </div>
         <!-- Bottom Section: Recent Activities and Priority Tracking -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
-          <!-- Recent Activities Section (table) -->
-          <div class="bg-white p-6 rounded-2xl shadow md:col-span-2 border border-gray-100">
-            <h3 class="text-lg font-semibold mb-2 text-gray-800">RECENT ACTIVITIES</h3>
-            <div class="overflow-x-auto">
-              <table class="min-w-full text-sm rounded-xl overflow-hidden shadow-lg border-2 border-teal-700">
-                <thead class="bg-gradient-to-r from-teal-800 to-blue-900 text-white font-bold tracking-wider border-b border-teal-900 sticky top-0 z-10">
-                  <tr>
-                    <th class="py-3 px-4 rounded-tl-xl text-left">TIMESTAMP</th>
-                    <th class="py-3 px-4 text-left">FROM/ TO</th>
-                    <th class="py-3 px-4 text-left">SUMMARY</th>
-                    <th class="py-3 px-4 rounded-tr-xl text-left">ACTIONS</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {#each recentActivities as activity, i}
-                    <tr class="border-b last:border-b-0 {i % 2 === 0 ? 'bg-white' : 'bg-teal-50'}">
-                      <td class="py-3 px-4 whitespace-nowrap text-left">{activity.timestamp}</td>
-                      <td class="py-3 px-4 whitespace-nowrap text-left">{activity.sender || activity.recipient || '--'}</td>
-                      <td class="py-3 px-4 text-left">{activity.subject}</td>
-                      <td class="py-3 px-4 text-left">
-                        <a href="/log/{activity.id}" class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-teal-700 text-white font-semibold shadow hover:bg-teal-900 transition-colors duration-150">
-                          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                          View
-                        </a>
-                      </td>
-                    </tr>
-                  {:else}
-                    <tr>
-                      <td colspan="4" class="py-6 text-center text-gray-500 bg-white rounded-b-xl">No recent activities</td>
-                    </tr>
-                  {/each}
-                </tbody>
-              </table>
-            </div>
-          </div>
+         
           <!-- Priority Tracking -->
           <div class="bg-gradient-to-tr from-teal-50 to-blue-50 p-6 rounded-2xl shadow border-l-4 border-teal-600 flex flex-col gap-3 animate-fade-in">
             <h3 class="text-lg font-bold mb-2 text-teal-900 flex items-center gap-2">
